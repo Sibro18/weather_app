@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/configs">
+        <file alias="backend">resources/configs/backend-config.json</file>
+    </qresource>
+</RCC>

@@ -52,6 +52,9 @@ namespace GeoNames
          * @return Json view.
          */
         QVariantMap toVariantMap() const;
+
+        bool operator==(const RequestData& other) const;
+        bool operator<(const RequestData& other) const;
     };
 }
 

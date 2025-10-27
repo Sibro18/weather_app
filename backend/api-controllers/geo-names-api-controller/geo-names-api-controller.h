@@ -21,16 +21,18 @@ namespace GeoNames
     public:
         /**
          * @brief Constructs the controller with the given API key.
-         * @param apiKey - GeoNames API username.
          * @param parent - Parent QObject.
          */
-        explicit GeoNamesApiController(const QString &apiKey, GeneralUtils::TaskManager* taskManager, QObject* parent = nullptr);
+        explicit GeoNamesApiController(
+            GeneralUtils::TaskManager* taskManager,
+            QObject* parent = nullptr
+        );
 
         /**
          * @brief Fetches country data using the specified request parameters.
          * @param requestData - Request parameters.
          */
-        void fetchCountryData(const GeoNames::RequestData &requestData);
+        void fetchCountryData(GeoNames::RequestData requestData);
     signals:
         /**
          * @brief Emitted when data for a country has been fetched.
@@ -39,16 +41,13 @@ namespace GeoNames
         void dataByCountryFetched(GeoNames::FetchResult* fetchResult);
     private:
         /**
-         * @brief GeoNames API username.
+         * @brief Manager for network requests.
          */
-        QString _apiKey;
+        QNetworkAccessManager _manager;
 
         /**
-         * @brief URL template for API requests.
+         * @brief Manager for async operations.
          */
-        const QString _apiUrlTemplate = "http://api.geonames.org/searchJSON?username=%1&country=%2";
-
-        QNetworkAccessManager _manager;
         GeneralUtils::TaskManager* _taskManager;
 
         /**
@@ -56,17 +55,21 @@ namespace GeoNames
          * @param requestData - parameters for API request.
          * @return Fully constructed Url for GeoNames API call.
          */
-        QUrl _buildRequestUrl(const RequestData &requestData) const;
+        QUrl _buildRequestUrl(const RequestData &requestData, const QString &endpoint) const;
 
         /**
-         * @brief Handles ther network reply.
+         * @brief Handles ther network reply and fill result of fetch.
          * @param reply - API response.
          * @param requestData - Original request data.
-         * @return result of fetching containing parsed data and error information.
          */
-        FetchResult* _getFetchResult(const QByteArray &payload, const RequestData &requestData, const QString &errorString);
+        void _fillFetchResult(const QByteArray &payload, FetchResult* fetchResult);
 
-
+        /**
+         * @brief Parses JSON response from GeoNames API.
+         * @param doc - JSON document containing API response.
+         * @param errorString - Reference to string where error message will be stored if parsing fails.
+         * @return List of parsed geographical data objects.
+         */
         QList<GeoParsingData> _parseResponse(const QJsonDocument& doc, QString& errorString) const;
 
         /**
@@ -81,7 +84,7 @@ namespace GeoNames
          * @param requestData - Request parameters.
          * @return URL query string.
          */
-        QString _getUrlInfoByRequest(const RequestData &requestData) const;
+        QString _getFilledUrlParamsByRequest(const RequestData &requestData) const;
     };
 }
 

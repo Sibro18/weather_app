@@ -52,7 +52,7 @@ namespace GeoNames
          * @brief Fetches GeoNames data for the given request parameters.
          * @param requestData - Parameters specifying the request for GeoNames data.
          */
-        void fetchDataByRequestAsync(const GeoNames::RequestData &requestData);
+        void fetchDataByRequestAsync(GeoNames::RequestData requestData);
 
     signals:
         /**

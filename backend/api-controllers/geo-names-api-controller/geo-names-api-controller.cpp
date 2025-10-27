@@ -4,19 +4,23 @@
 #include <QStringList>
 #include <QThread>
 #include "geo-names-api-controller.h"
-
+#include "../../utils/backend-config/backend-config.h"
 
 namespace GeoNames
 {
-    // WELL!!!
-    GeoNamesApiController::GeoNamesApiController(const QString &apiKey, GeneralUtils::TaskManager* taskManager , QObject* parent)
-        : QObject(parent), _apiKey(apiKey), _taskManager(taskManager)
+    GeoNamesApiController::GeoNamesApiController(GeneralUtils::TaskManager* taskManager , QObject* parent)
+        : QObject(parent), _taskManager(taskManager)
     {}
 
-    // WELL!!!
-    void GeoNamesApiController::fetchCountryData(const RequestData &requestData)
+    void GeoNamesApiController::fetchCountryData(RequestData requestData)
     {
-        QUrl url = _buildRequestUrl(requestData);
+        if (requestData.countryCode.isEmpty()) {
+            _log("Validation", "Country code is empty!");
+
+            return;
+        }
+
+        QUrl url = _buildRequestUrl(requestData, "/searchJSON");
 
         QNetworkRequest request(url);
 
@@ -39,7 +43,7 @@ namespace GeoNames
 
         QNetworkReply *reply = _manager.get(request);
 
-        connect(reply, &QNetworkReply::finished, this, [this, reply, requestData]()
+        connect(reply, &QNetworkReply::finished, this, [this, reply, requestData = std::move(requestData)]()
         {
             const auto errorString = reply->error() == QNetworkReply::NoError
              ? ""
@@ -49,14 +53,23 @@ namespace GeoNames
                 controller = QPointer<GeoNamesApiController>(this),
                 payload = std::move(reply->readAll()),
                 errorString = std::move(errorString),
-                requestData] ()
+                requestData = std::move(requestData)] ()
             {
                 if (!controller)
                 {
                     return;
                 }
 
-                const auto fetchResult = controller->_getFetchResult(payload, requestData, errorString);
+                FetchResult* fetchResult { new FetchResult() };
+
+                fetchResult->data.first = requestData.countryCode;
+                fetchResult->requestData = std::move(requestData);
+
+                if (!errorString.isEmpty()) {
+                    fetchResult->errorString = errorString;
+                } else {
+                    controller->_fillFetchResult(payload, fetchResult);
+                }
 
                 QMetaObject::invokeMethod(controller, [controller, fetchResult = std::move(fetchResult)]() {
                     if (!controller)
@@ -72,32 +85,21 @@ namespace GeoNames
         });
     }
 
-    // WELL!!!
-    QUrl GeoNamesApiController::_buildRequestUrl(const RequestData &requestData) const
+
+    QUrl GeoNamesApiController::_buildRequestUrl(const RequestData &requestData, const QString &endpoint) const
     {
-        QString baseUrl = QString(_apiUrlTemplate)
-            .arg(_apiKey, requestData.countryCode);
+        const auto serviceConfig = GeneralUtils::BackendConfig::geoNames().api;
 
-        baseUrl += _getUrlInfoByRequest(requestData);
+        QString url = QString(serviceConfig.url + endpoint + "?username=%1")
+            .arg(serviceConfig.key);
 
-        return QUrl(baseUrl);
+        url += _getFilledUrlParamsByRequest(requestData);
+
+        return QUrl(url);
     }
 
-    // WELL!!!
-    FetchResult* GeoNamesApiController::_getFetchResult(const QByteArray &payload, const RequestData &requestData, const QString &errorString)
+    void GeoNamesApiController::_fillFetchResult(const QByteArray &payload, FetchResult* fetchResult)
     {
-        FetchResult* fetchResult { new FetchResult() };
-
-        fetchResult->requestData = requestData;
-        fetchResult->data.first = requestData.countryCode;
-
-        if (!errorString.isEmpty())
-        {
-            fetchResult->errorString = errorString;
-
-            return fetchResult;
-        }
-
         QJsonParseError jsonError;
         const QJsonDocument doc = QJsonDocument::fromJson(std::move(payload), &jsonError);
 
@@ -106,8 +108,6 @@ namespace GeoNames
             qDebug() << jsonError.errorString();
 
             fetchResult->errorString = jsonError.errorString();
-
-            return fetchResult;
         }
 
         QString parseError;
@@ -118,11 +118,8 @@ namespace GeoNames
         {
             fetchResult->errorString = parseError;
         }
-
-        return fetchResult;
     }
 
-    // WELL!!!
     QList<GeoParsingData> GeoNamesApiController::_parseResponse(const QJsonDocument& doc, QString& errorString) const
     {
         const auto invalidJsonError = "Invalid JSON response";
@@ -148,19 +145,22 @@ namespace GeoNames
         return GeoParsingData::fromJsonArray(arrVal->toArray());
     }
 
-    // WELL!!!
     void GeoNamesApiController::_log(const QString& context, const QString& message) const
     {
         qWarning() << QString("[GeoNamesApiController].%1").arg(context) << "\t" << message;
     }
 
-    // WELL!!!
-    QString GeoNamesApiController::_getUrlInfoByRequest(const RequestData &requestData) const
+    QString GeoNamesApiController::_getFilledUrlParamsByRequest(const RequestData &requestData) const
     {
         QString urlInfo = "";
         QString featureClass = requestData.featureClass.has_value()
          ? requestData.featureClass.value().toString()
          : "";
+
+        if (!requestData.countryCode.isEmpty())
+        {
+            urlInfo += QString("&country=%1").arg(requestData.countryCode);
+        }
 
         if (!featureClass.isEmpty())
         {

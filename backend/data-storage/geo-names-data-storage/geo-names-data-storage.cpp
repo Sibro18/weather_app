@@ -1,4 +1,9 @@
+#include <QVariantList>
+#include <QVariantMap>
+#include <QSet>
+
 #include "geo-names-data-storage.h"
+
 
 namespace GeoNames
 {
@@ -6,7 +11,7 @@ namespace GeoNames
         : QObject{parent}
     {}
 
-    GeoNamesDataStorage::GeoNamesDataStorage(QStringList countryList, QObject *parent)
+    GeoNamesDataStorage::GeoNamesDataStorage(const QStringList &countryList, QObject *parent)
         : QObject{parent}
     {
         for (const auto &item : countryList)
@@ -17,15 +22,21 @@ namespace GeoNames
 
     QVariantMap GeoNamesDataStorage::getCountryData(const QString &countryCode) const
     {
+        auto it = _countryLocationsMap.constFind(countryCode);
+
+        if (it == _countryLocationsMap.constEnd())
+        {
+            return {};
+        }
+
         QVariantMap countryData;
         countryData["key"] = countryCode;
         countryData["mainTitle"] = countryCode;
 
-        const auto listForItteration = _countryLocationsMap[countryCode];
-
         QVariantList cityList;
+        cityList.reserve(it->size());
 
-        for (const auto &data : listForItteration)
+        for (const auto &data : *it)
         {
             QVariantMap listItem;
             listItem["key"] = QString("%1_%2").arg(data.latitude, data.longitude);
@@ -36,7 +47,7 @@ namespace GeoNames
             cityList.append(listItem);
         }
 
-        countryData["items"] = cityList;
+        countryData["items"] = std::move(cityList);
 
         return countryData;
     }
@@ -48,25 +59,32 @@ namespace GeoNames
 
     bool GeoNamesDataStorage::addData(const QPair<QString, QList<GeoNames::GeoParsingData>> &data)
     {
-        const auto &[countryCode, locationList] = data;
+        const auto &[countryCode, newLocations] = data;
 
-        if (!_countryLocationsMap.contains(countryCode))
+        if (newLocations.isEmpty())
         {
-            _countryLocationsMap[countryCode] = locationList;
+            return false;
+        }
+
+        auto& existingList = _countryLocationsMap[countryCode];
+        const int oldSize = existingList.size();
+
+        if(oldSize == 0)
+        {
+            existingList = newLocations;
+            return true;
+        }
+
+        QSet<GeoParsingData> uniqueSet(existingList.begin(), existingList.end());
+        uniqueSet.unite(QSet<GeoParsingData>(newLocations.begin(), newLocations.end()));
+
+        if (uniqueSet.size() != oldSize)
+        {
+            existingList = uniqueSet.values();
 
             return true;
         }
 
-        const auto newDataLength = locationList.length();
-        const auto geoParsingDataList = _countryLocationsMap[countryCode];
-
-        QSet<GeoParsingData> uniqueSet;
-
-        uniqueSet.unite(QSet<GeoParsingData>{locationList.constBegin(), locationList.constEnd()});
-        uniqueSet.unite(QSet<GeoParsingData>{geoParsingDataList.constBegin(), geoParsingDataList.constEnd()});
-
-        _countryLocationsMap[countryCode] = uniqueSet.values();
-
-        return newDataLength != geoParsingDataList.length();
+        return false;
     }
 }

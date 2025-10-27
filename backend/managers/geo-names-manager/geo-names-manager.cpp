@@ -1,6 +1,7 @@
 #include <QSet>
 #include <QFileInfo>
 #include <QPointer>
+#include <QList>
 
 #include "geo-names-manager.h"
 
@@ -23,30 +24,32 @@ namespace GeoNames
             &GeoNames::GeoNamesManager::handleDataFromApiFetched
         );
     }
-    void GeoNamesManager::fetchDataByRequestAsync(const GeoNames::RequestData &requestData)
+    void GeoNamesManager::fetchDataByRequestAsync(GeoNames::RequestData requestData)
     {
-        _apiController->fetchCountryData(requestData);
+        _apiController->fetchCountryData(std::move(requestData));
     }
 
     void GeoNamesManager::fetchDataFromFileSystem(const QString& countryCode)
     {
         _taskManager->runAsync(
             GeneralUtils::Priority::High,
-            [controller = QPointer<GeoNamesManager>(this), countryCode = std::move(countryCode)] ()
+            [
+                controller = QPointer<GeoNamesManager>(this),
+                countryCode,
+                cachePath = this->_cacheFilePathTemplate.arg(countryCode)
+            ] ()
             {
-                auto data = controller->_fileService->getData(
-                    controller->_cacheFilePathTemplate.arg(countryCode)
-                );
+                auto data = controller->_fileService->getData(cachePath);
 
-                if (!data.has_value())
+                if (!data)
                 {
                     return;
                 }
 
                 QJsonParseError parseError;
-                QJsonDocument doc = QJsonDocument::fromJson(data.value(), &parseError);
+                QJsonDocument doc = QJsonDocument::fromJson(*data, &parseError);
 
-                GeoNames::FetchResult* fetchResult { new FetchResult() };
+                GeoNames::FetchResult* fetchResult  = new FetchResult();
 
                 fetchResult->data.first = countryCode;
 
@@ -54,26 +57,25 @@ namespace GeoNames
                 {
                     fetchResult->errorString = parseError.errorString();
                 }
-                else
+                else if (doc.isObject())
                 {
-                    QJsonObject dataInJson;
+                    QJsonObject dataInJson = doc.object();
 
-                    if (doc.isObject())
+                    if (dataInJson.contains("items"))
                     {
-                        dataInJson = doc.object();
+                        QJsonObject itemsObj = dataInJson["items"].toObject();
+                        QJsonArray jsonArray;
 
-                        if (dataInJson.contains("items"))
+                        for (auto it = itemsObj.begin(); it != itemsObj.end(); ++it)
                         {
-                            const auto jsonArray = QJsonArray::fromVariantList(
-                                dataInJson["items"].toObject().toVariantHash().values()
-                            );
-
-                            fetchResult->data.second = GeoParsingData::fromJsonArray(jsonArray);
+                            jsonArray.append(it.value());
                         }
+
+                        fetchResult->data.second = GeoParsingData::fromJsonArray(jsonArray);
                     }
                 }
 
-                QMetaObject::invokeMethod(controller, [controller, fetchResult = std::move(fetchResult)]() {
+                QMetaObject::invokeMethod(controller, [controller, fetchResult]() {
                     if (controller)
                     {
                         emit controller->geoNamesFetched(fetchResult);
@@ -87,68 +89,76 @@ namespace GeoNames
     {
         const auto fileNameListOpt = _fileService->getFileNamesByDir(_cacheDirPath);
 
-        if (!fileNameListOpt.has_value())
+        if (!fileNameListOpt)
         {
             return {};
         }
 
         QStringList countryList;
+        countryList.reserve(fileNameListOpt->size());
 
-        for (const auto &fileName : fileNameListOpt.value())
+        for (const auto &fileName : *fileNameListOpt)
         {
-            QFileInfo fileInfo(fileName);
-
-            if (fileInfo.suffix().toLower() != "json")
+            if (fileName.endsWith(".json", Qt::CaseInsensitive))
             {
-                continue;
+                QFileInfo fileInfo(fileName);
+                countryList.append(fileInfo.baseName());
             }
-
-            countryList.append(
-                fileInfo.baseName()
-            );
         }
 
         return countryList;
+    }
+
+
+    void GeoNamesManager::handleDataFromApiFetched(GeoNames::FetchResult* fetchResult)
+    {
+        if (fetchResult->errorString.isEmpty())
+        {
+            _saveDataToFileSystemAsync(fetchResult->data);
+        }
+
+        emit geoNamesFetched(fetchResult);
     }
 
     void GeoNamesManager::_saveDataToFileSystemAsync(const QPair<QString, QList<GeoParsingData>>& data)
     {
         _taskManager->runAsync(
             GeneralUtils::Priority::Normal,
-            [controller = QPointer<GeoNamesManager>(this), data = std::move(data)] ()
+            [
+                controller = QPointer<GeoNamesManager>(this),
+                countryCode = data.first,
+                newLocations = data.second,
+                cacheFilePath = this->_cacheFilePathTemplate.arg(data.first)
+            ] ()
             {
                 if (!controller)
                 {
                     return;
                 }
 
-                const auto& countryCode = data.first;
-                const auto& locationList = data.second;
-                const auto cacheFilePath = controller->_cacheFilePathTemplate.arg(countryCode);
-                const auto dataFromFyleSystem = controller->_fileService->getData(cacheFilePath);
+                const auto existingData = controller->_fileService->getData(cacheFilePath);
 
-                QList<GeoParsingData> savedData;
+                QList<GeoParsingData> mergedData;
 
-                if (dataFromFyleSystem != std::nullopt)
+                if (existingData != std::nullopt)
                 {
-                    const auto variantMapFromFyleSystem = controller->_byteArrayToVariantMap(dataFromFyleSystem.value());
+                    auto existingLocations = controller->_deserialaizeCountryData(
+                        controller->_byteArrayToVariantMap(*existingData)
+                    );
 
-                    QSet<GeoParsingData> uniqueSet;
-                    const auto oldData = controller->_deserialaizeCountryData(variantMapFromFyleSystem);
+                    QSet<GeoParsingData> uniqueSet(existingLocations.begin(), existingLocations.end());
+                    uniqueSet.unite(QSet<GeoParsingData>(newLocations.begin(), newLocations.end()));
 
-                    uniqueSet.unite(QSet<GeoParsingData>{locationList.constBegin(), locationList.constEnd()});
-                    uniqueSet.unite(QSet<GeoParsingData>{oldData.constBegin(), oldData.constEnd()});
-
-                    savedData = std::move(uniqueSet.values());
+                    mergedData = uniqueSet.values();
                 }
                 else
                 {
-                    savedData = locationList;
+                    mergedData = newLocations;
                 }
 
                 QJsonDocument savedDoc(
                     QJsonObject::fromVariantMap(controller->_serializeCountryData(
-                            qMakePair(countryCode, std::move(savedData))
+                            qMakePair(countryCode, std::move(mergedData))
                         )
                     )
                 );
@@ -183,16 +193,6 @@ namespace GeoNames
         return doc.object().toVariantMap();
     }
 
-    void GeoNamesManager::handleDataFromApiFetched(GeoNames::FetchResult* fetchResult)
-    {
-        if (fetchResult->errorString.isEmpty())
-        {
-            _saveDataToFileSystemAsync(fetchResult->data);
-        }
-
-        emit geoNamesFetched(fetchResult);
-    }
-
     QVariantMap GeoNamesManager::_serializeCountryData(const QPair<QString, QList<GeoParsingData>>& data) const
     {
         QVariantMap returnData;
@@ -205,7 +205,7 @@ namespace GeoNames
         for (const auto& geoData : data.second)
         {
             auto&& key = geoData.latitude + "_" + geoData.longitude;
-            itemData[std::move(key)] = geoData.toVariantMap();
+            itemData[key] = geoData.toVariantMap();
         }
 
         returnData["items"] = itemData;
@@ -215,9 +215,10 @@ namespace GeoNames
 
     QList<GeoParsingData> GeoNamesManager::_deserialaizeCountryData(QVariantMap data) const
     {
-        QList<GeoParsingData> returnData;
-
         const auto itemsMap = data["items"].toMap();
+
+        QList<GeoParsingData> returnData;
+        returnData.reserve(itemsMap.size());
 
         for (const auto& [key, value] : itemsMap.asKeyValueRange())
         {

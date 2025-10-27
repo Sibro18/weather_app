@@ -13,11 +13,19 @@ namespace GeoNames
         );
     }
 
-    void GeoNamesViewModel::fetchDataByRequestAsync(const QVariantMap &requestData) const
+    void GeoNamesViewModel::fetchDataByRequestAsync(const QVariantMap &requestData)
     {
-        const RequestData &request = RequestData::createFromQVariantMap(requestData);
+        RequestData request = RequestData::createFromQVariantMap(requestData);
 
-        _dataBridge->fetchDataByRequestAsync(request);
+        auto it = _requestsHistory.find(request);
+        if (it != _requestsHistory.end())
+        {
+            emit this->locationsFetched(it.value());
+
+            return;
+        }
+
+        _dataBridge->fetchDataByRequestAsync(std::move(request));
     }
 
     void GeoNamesViewModel::fetchDataFromFileSystem(const QString &countryCode) const
@@ -28,9 +36,9 @@ namespace GeoNames
     QVariantList GeoNamesViewModel::getCountryList() const
     {
         QVariantList returnList;
-        const auto countryList = _dataStorage->getCountryList();
+        const QList<QString> countryList = _dataStorage->getCountryList();
 
-        for (const auto &country : countryList)
+        for (const QString &country : countryList)
         {
             returnList.append(_dataStorage->getCountryData(country));
         }
@@ -40,19 +48,23 @@ namespace GeoNames
 
     void GeoNamesViewModel::dataFetchedHandler(GeoNames::FetchResult* fetchResult)
     {
+        QScopedPointer<GeoNames::FetchResult> scopedResult(fetchResult);
+
         QVariantMap returnData;
 
-        if (!fetchResult->errorString.isEmpty())
+        if (!scopedResult->errorString.isEmpty())
         {
-            returnData["errorString"] = fetchResult->errorString;
+            returnData["errorString"] = scopedResult->errorString;
         }
         else
         {
-            _dataStorage->addData(fetchResult->data);
-            // if (_dataStorage->addData(fetchResult->data))
+            _dataStorage->addData(scopedResult->data);
 
-            returnData = _dataStorage->getCountryData(fetchResult->data.first);
+            returnData = _dataStorage->getCountryData(scopedResult->data.first);
+
+            _requestsHistory[scopedResult->requestData] = returnData;
         }
+
 
         emit this->locationsFetched(returnData);
     }

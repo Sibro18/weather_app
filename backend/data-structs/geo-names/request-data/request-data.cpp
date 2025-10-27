@@ -31,4 +31,22 @@ namespace GeoNames
 
         return map;
     }
+
+    bool RequestData::operator==(const RequestData& other) const {
+        return countryCode == other.countryCode &&
+            name == other.name &&
+            lang == other.lang &&
+            startWith == other.startWith &&
+            featureClass.value().code() == other.featureClass.value().code();
+    }
+
+    bool RequestData::operator<(const RequestData& other) const {
+        if (countryCode != other.countryCode)
+            return countryCode < other.countryCode;
+        if (name != other.name)
+            return name < other.name;
+
+        return false;
+    }
+
 }

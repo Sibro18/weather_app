@@ -7,6 +7,7 @@
 
 #include "backend/data-storage/weather-forecast-data-storage/weather-forecast-data-storage.h"
 #include "backend/api-controllers/weather-api-controller/weather-api-controller.h"
+#include "backend/utils/backend-config/backend-config.h"
 
 #include <QGuiApplication>
 #include <QtQml/QQmlApplicationEngine>
@@ -14,10 +15,14 @@
 
 int main(int argc, char *argv[])
 {
+    // ":/configs/app_config.json".
     QGuiApplication* app(new QGuiApplication {argc, argv});
 
+    // Попробуй разные пути:
+    qDebug() << GeneralUtils::BackendConfig::load(":/configs/backend");
+
     GeneralUtils::TaskManager* taskManager = new GeneralUtils::TaskManager(app);
-    GeoNames::GeoNamesApiController* geoApiController = new GeoNames::GeoNamesApiController("Sibro", taskManager, app);
+    GeoNames::GeoNamesApiController* geoApiController = new GeoNames::GeoNamesApiController(taskManager, app);
     GeneralUtils::FileService* fileService = new GeneralUtils::FileService(app);
 
     GeoNames::GeoNamesManager* geoNamesBridge = new GeoNames::GeoNamesManager(geoApiController, taskManager, fileService, app);

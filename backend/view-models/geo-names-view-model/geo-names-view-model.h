@@ -3,8 +3,11 @@
 
 #include <QObject>
 #include <QVariantList>
+#include <QMap>
+
 #include "../../managers/geo-names-manager/geo-names-manager.h"
 #include "../../data-storage/geo-names-data-storage/geo-names-data-storage.h"
+
 
 namespace GeoNames
 {
@@ -14,7 +17,7 @@ namespace GeoNames
     public:
         explicit GeoNamesViewModel(GeoNamesManager* dataBridge, GeoNamesDataStorage* dataStorage, QObject *parent = nullptr);
 
-        Q_INVOKABLE void fetchDataByRequestAsync(const QVariantMap &requestData) const;
+        Q_INVOKABLE void fetchDataByRequestAsync(const QVariantMap &requestData);
         Q_INVOKABLE void fetchDataFromFileSystem(const QString &countryCode) const;
         Q_INVOKABLE QVariantList getCountryList() const;
 
@@ -24,6 +27,7 @@ namespace GeoNames
     private:
         GeoNamesManager* _dataBridge;
         GeoNamesDataStorage* _dataStorage;
+        QMap<RequestData, QVariantMap> _requestsHistory;
     };
 } // namespace GeoNames
 
