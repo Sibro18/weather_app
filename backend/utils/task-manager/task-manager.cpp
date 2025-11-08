@@ -1,6 +1,7 @@
 #include "task-manager.h"
 #include <QPointer>
 
+
 namespace GeneralUtils
 {
     TaskManager::TaskManager(QObject *parent)
@@ -9,12 +10,10 @@ namespace GeneralUtils
 
     TaskManager::~TaskManager()
     {
-        QMutexLocker locker(&_taskAccessMutex);
-
         for (auto &futWatcher : _activeTaskList)
         {
             futWatcher->future().waitForFinished();
-            delete futWatcher;
+            futWatcher->deleteLater();
         }
 
         _activeTaskList.clear();
@@ -26,12 +25,13 @@ namespace GeneralUtils
 
         std::function<void()> wrapper = [this, func = std::forward<std::function<void()>>(function)]() mutable {
             auto task = QtConcurrent::run(std::move(func));
+
+            _activeTaskCount++;
             _addTaskToWatchList(task);
         };
 
         if (_activeTaskCount < _maxConcurrentTaskCount)
         {
-            _activeTaskCount++;
             locker.unlock();
             wrapper();
         }
@@ -51,7 +51,7 @@ namespace GeneralUtils
         {
             if (!taskManager)
             {
-                delete watcher;
+                watcher->deleteLater();
 
                 return;
             }
@@ -59,7 +59,7 @@ namespace GeneralUtils
             QMutexLocker locker(&taskManager->_taskAccessMutex);
 
             taskManager->_activeTaskList.removeAll(watcher);
-            delete watcher;
+            watcher->deleteLater();
             --taskManager->_activeTaskCount;
 
             locker.unlock();
@@ -80,8 +80,6 @@ namespace GeneralUtils
             if (_activeTaskCount < _maxConcurrentTaskCount && !_taskQueue[p].isEmpty())
             {
                 auto fn = _taskQueue[p].dequeue();
-                ++_activeTaskCount;
-
                 locker.unlock();
                 fn();
 

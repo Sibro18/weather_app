@@ -34,7 +34,7 @@ ApplicationWindow {
                     console.log("lon: ", leafData.longitude);
 
                     weatherForecastController.fetchDataAsync({
-                        "resource": "forecast",
+                        "resource": "forecast",         // forecast || weather
                         "latitude": leafData.latitude,
                         "longitude": leafData.longitude
                     });

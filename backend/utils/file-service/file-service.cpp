@@ -18,7 +18,7 @@ namespace GeneralUtils
 
     void FileService::saveData(const QMap<QString, QByteArray> &fileNameDataMap)
     {
-        for (const auto &&[path, data] : fileNameDataMap.asKeyValueRange())
+        for (const auto &[path, data] : fileNameDataMap.asKeyValueRange())
         {
             QMutex* fileMutex = _getMutexForFile(path);
             QMutexLocker locker(fileMutex);

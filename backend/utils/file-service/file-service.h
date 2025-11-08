@@ -2,12 +2,9 @@
 #define FILE_SERVICE_H
 
 
-#include <QString>
-#include <QMap>
 #include <QByteArray>
 #include <QSharedPointer>
 #include <QMutex>
-#include <optional>
 
 
 namespace GeneralUtils
@@ -84,7 +81,6 @@ namespace GeneralUtils
          * @brief Deleted copy assignment operator to prevent assignment of the service.
          */
         FileService& operator=(const FileService&) = delete;
-
     private:
         /**
          * @brief Map of file paths to their associated mutexes.
@@ -113,7 +109,6 @@ namespace GeneralUtils
          * @return Pointer to a QMutex guarding access to the specified file.
          */
         QMutex* _getMutexForFile(const QString& fileName);
-
     };
 }
 #endif // FILE_SERVICE_H

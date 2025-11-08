@@ -1,13 +1,16 @@
 #include "geo-names-view-model.h"
 
+
 namespace GeoNames
 {
-    GeoNamesViewModel::GeoNamesViewModel(GeoNamesManager* dataBridge, GeoNamesDataStorage* dataStorage, QObject *parent)
-        : QObject{parent}, _dataBridge{dataBridge}, _dataStorage{dataStorage}
+    GeoNamesViewModel::GeoNamesViewModel(GeoNamesDataProvider* dataProvider, QObject *parent)
+        :
+        QObject{parent},
+        _dataProvider{dataProvider}
     {
         connect(
-            _dataBridge,
-            &GeoNamesManager::geoNamesFetched,
+            _dataProvider,
+            &GeoNamesDataProvider::geoNamesFetched,
             this,
             &GeoNamesViewModel::dataFetchedHandler
         );
@@ -18,56 +21,66 @@ namespace GeoNames
         RequestData request = RequestData::createFromQVariantMap(requestData);
 
         auto it = _requestsHistory.find(request);
+
         if (it != _requestsHistory.end())
         {
-            emit this->locationsFetched(it.value());
+            emit this->locationsFetched(*it);
 
             return;
         }
 
-        _dataBridge->fetchDataByRequestAsync(std::move(request));
-    }
-
-    void GeoNamesViewModel::fetchDataFromFileSystem(const QString &countryCode) const
-    {
-        _dataBridge->fetchDataFromFileSystem(countryCode);
+        _dataProvider->fetchDataByRequestAsync(std::move(request));
     }
 
     QVariantList GeoNamesViewModel::getCountryList() const
     {
         QVariantList returnList;
-        const QList<QString> countryList = _dataStorage->getCountryList();
 
-        for (const QString &country : countryList)
+        auto&& forIterrationList = _dataProvider->getCountryList();
+
+        for (const auto& countryCode : forIterrationList)
         {
-            returnList.append(_dataStorage->getCountryData(country));
+            QVariantMap returnItem;
+            returnItem["key"] = countryCode;
+            returnItem["mainTitle"] = countryCode;
+            returnItem["items"] = QVariantList();
+
+            returnList.append(returnItem);
         }
 
         return returnList;
     }
 
-    void GeoNamesViewModel::dataFetchedHandler(GeoNames::FetchResult* fetchResult)
+    void GeoNamesViewModel::dataFetchedHandler(const GeoNames::FetchResult &fetchResult)
     {
-        QScopedPointer<GeoNames::FetchResult> scopedResult(fetchResult);
+        auto returnData = _parseFetchedData(fetchResult.data);
 
-        QVariantMap returnData;
+        _requestsHistory[fetchResult.requestData] = returnData;
 
-        if (!scopedResult->errorString.isEmpty())
-        {
-            returnData["errorString"] = scopedResult->errorString;
-        }
-        else
-        {
-            _dataStorage->addData(scopedResult->data);
-
-            returnData = _dataStorage->getCountryData(scopedResult->data.first);
-
-            _requestsHistory[scopedResult->requestData] = returnData;
-        }
-
-
-        emit this->locationsFetched(returnData);
+        emit this->locationsFetched(std::move(returnData));
     }
 
+    QVariantMap GeoNamesViewModel::_parseFetchedData(const QPair<QString, QList<LocationData>> & data) const
+    {
+        QVariantMap returnData;
+        returnData["key"] = data.first;
+        returnData["mainTitle"] = data.first;
 
+        QVariantList cityList;
+
+        for (const auto &item : data.second)
+        {
+            QVariantMap listItem;
+            listItem["key"] = QString("%1_%2").arg(item.latitude, item.longitude);
+            listItem["mainTitle"] = item.name;
+            listItem["secondTitle"] = item.adminName;
+            listItem["data"] = item.toVariantMap();
+
+            cityList.append(listItem);
+        }
+
+        returnData["items"] = cityList;
+
+        return returnData;
+    }
 }

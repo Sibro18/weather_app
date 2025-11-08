@@ -1,13 +1,21 @@
-#include "backend/api-controllers/geo-names-api-controller/geo-names-api-controller.h"
-#include "backend/managers/geo-names-manager/geo-names-manager.h"
-#include "backend/data-storage/geo-names-data-storage/geo-names-data-storage.h"
+#include "backend/infrastructure/api/geo-names-api-controller/geo-names-api-controller.h"
+#include "backend/infrastructure/cache/geo-names-cache-service/geo-names-cache-service.h"
 
+
+
+#include "backend/application/data-providers/geo-names-data-provider/geo-names-data-provider.h"
+#include "backend/application/services/geo-names/geo-names-file-service/geo-names-file-service.h"
 #include "backend/view-models/geo-names-view-model/geo-names-view-model.h"
+
+#include "backend/infrastructure/api/weather-api-controller/weather-api-controller.h"
+#include "backend/infrastructure/cache/weather-forecast-cache-service/weather-forecast-cache-service.h"
+#include "backend/application/data-providers/weather-forecast-data-provider/weather-forecast-data-provider.h"
 #include "backend/view-models/weather-forecast-view-model/weather-forecast-view-model.h"
 
-#include "backend/data-storage/weather-forecast-data-storage/weather-forecast-data-storage.h"
-#include "backend/api-controllers/weather-api-controller/weather-api-controller.h"
+// #include "backend/view-models/weather-forecast-view-model/weather-forecast-view-model.h"
+
 #include "backend/utils/backend-config/backend-config.h"
+#include "backend/utils/file-service/file-service.h"
 
 #include <QGuiApplication>
 #include <QtQml/QQmlApplicationEngine>
@@ -15,30 +23,49 @@
 
 int main(int argc, char *argv[])
 {
-    // ":/configs/app_config.json".
     QGuiApplication* app(new QGuiApplication {argc, argv});
 
-    // Попробуй разные пути:
-    qDebug() << GeneralUtils::BackendConfig::load(":/configs/backend");
+    GeneralUtils::BackendConfig::load(":/configs/backend");
 
     GeneralUtils::TaskManager* taskManager = new GeneralUtils::TaskManager(app);
-    GeoNames::GeoNamesApiController* geoApiController = new GeoNames::GeoNamesApiController(taskManager, app);
     GeneralUtils::FileService* fileService = new GeneralUtils::FileService(app);
 
-    GeoNames::GeoNamesManager* geoNamesBridge = new GeoNames::GeoNamesManager(geoApiController, taskManager, fileService, app);
-    GeoNames::GeoNamesDataStorage* geoNamesDataStorage = new GeoNames::GeoNamesDataStorage(geoNamesBridge->getCountryList(), app);
-    GeoNames::GeoNamesViewModel* geoNamesController = new GeoNames::GeoNamesViewModel(geoNamesBridge, geoNamesDataStorage, app);
-
-    WeatherForecast::WeatherApiController* weatherApiController = new WeatherForecast::WeatherApiController(
-        "66286377b1d5265be2cd40b16761b858",
+    GeoNames::GeoNamesCacheService* geoCacheService = new GeoNames::GeoNamesCacheService(app);
+    GeoNames::GeoNamesApiController* geoApiController = new GeoNames::GeoNamesApiController(
         taskManager,
+        GeneralUtils::BackendConfig::geoNames().api,
         app
     );
-    WeatherForecast::WeatherForecastDataStorage* weatherDataStorage = new WeatherForecast::WeatherForecastDataStorage(app);
-    WeatherForecast::WeatherForecastViewModel* weatherForecastController = new WeatherForecast::WeatherForecastViewModel(
-        weatherApiController,
+    GeoNames::GeoNamesFileService* geoFileService = new GeoNames::GeoNamesFileService(
+        fileService,
+        { GeneralUtils::BackendConfig::geoNames().fileSystem.relativePath, false },
+        app
+    );
+    GeoNames::GeoNamesDataProvider* geoNamesBridge = new GeoNames::GeoNamesDataProvider(
+        geoApiController,
         taskManager,
+        geoCacheService,
+        geoFileService,
+        app
+    );
+    GeoNames::GeoNamesViewModel* geoNamesController = new GeoNames::GeoNamesViewModel(
+        geoNamesBridge,
+        app
+    );
+
+    WeatherForecast::WeatherApiController* weatherApiController = new WeatherForecast::WeatherApiController(
+        taskManager,
+        GeneralUtils::BackendConfig::weatherForecast().api,
+        app
+    );
+    WeatherForecast::WeatherForecastCacheService* weatherDataStorage = new WeatherForecast::WeatherForecastCacheService(app);
+    WeatherForecast::WeatherForecastDataProvider* weatherForecastDataProvider = new WeatherForecast::WeatherForecastDataProvider(
+        weatherApiController,
         weatherDataStorage,
+        app
+    );
+    WeatherForecast::WeatherForecastViewModel* weatherForecastController = new WeatherForecast::WeatherForecastViewModel(
+        weatherForecastDataProvider,
         app
     );
 
@@ -54,3 +81,4 @@ int main(int argc, char *argv[])
 
     return app->exec();
 }
+

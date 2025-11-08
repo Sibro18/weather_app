@@ -1,36 +1,37 @@
-#include "backend-config.h"
 #include <QFile>
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include "backend-config.h"
+
+
 namespace GeneralUtils
 {
-bool BackendConfig::load(const QString& filename)
-{
-    QFile file(filename);
-
-    if (!file.open(QIODevice::ReadOnly))
+    bool BackendConfig::load(const QString& filename)
     {
-        qDebug() << "Failed to open file:" << file.errorString();
-        return false;
-    }
+        QFile file(filename);
 
-    QByteArray data = file.readAll();
+        if (!file.open(QIODevice::ReadOnly))
+        {
+            qDebug() << "Failed to open file:" << file.errorString();
+            return false;
+        }
 
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+        QByteArray data = file.readAll();
 
-    if (doc.isNull())
-    {
-        qDebug() << "JSON parse error:" << parseError.errorString();
-        qDebug() << "Error at position:" << parseError.offset;
+        QJsonParseError parseError;
+        QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
 
-        return false;
-    }
+        if (doc.isNull())
+        {
+            qDebug() << "JSON parse error:" << parseError.errorString();
+            qDebug() << "Error at position:" << parseError.offset;
 
-    qDebug() << "JSON parsed successfully!";
+            return false;
+        }
 
+        qDebug() << "JSON parsed successfully!";
 
         auto setData = [] (ServiceConfig &config, const QJsonObject &object)
         {

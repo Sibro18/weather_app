@@ -2,75 +2,68 @@
 #define WEATHER_FORECAST_VIEW_MODEL_H
 
 
-#include <QString>
-#include <QList>
-#include <QPair>
-
-#include "../../api-controllers/weather-api-controller/weather-api-controller.h"
-#include "../../utils/task-manager/task-manager.h"
-#include "../../data-storage/weather-forecast-data-storage/weather-forecast-data-storage.h"
+#include "../../application/data-providers/weather-forecast-data-provider/weather-forecast-data-provider.h"
 
 
 namespace WeatherForecast
 {
     /**
-     * @brief Bridge between the Weather API controller and the rest of the application.
+     * @brief QML view model for weather forecast data presentation.
      */
     class WeatherForecastViewModel : public QObject
     {
         Q_OBJECT
     public:
         /**
-         * @brief Constructs a WeatherDataBridge instance.
-         * @param apiController - Pointer to the WeatherApiController responsible for API calls.
-         * @param taskManager - Pointer to TaskManager for asynchronous task execution.
-         * @param fileService - Pointer to FileService for file system operations.
+         * @brief Constructs weather forecast view model.
+         * @param dataProvider - Weather forecast data provider.
          * @param parent - Optional parent QObject.
          */
         explicit WeatherForecastViewModel(
-            WeatherForecast::WeatherApiController* apiController,
-            GeneralUtils::TaskManager* taskManager,
-            WeatherForecast::WeatherForecastDataStorage* dataStorage,
+            WeatherForecast::WeatherForecastDataProvider* dataProvider,
             QObject* parent = nullptr
         );
 
         /**
-         * @brief Fetches weather data for the given request parameters.
-         * @param requestData - Parameters describing the weather request.
+         * @brief Fetch weather data asynchronously from QML.
+         * @param requestData - Request parameters as QVariantMap from QML.
          */
-        Q_INVOKABLE void fetchDataAsync(QVariantMap requestData);
+        Q_INVOKABLE void fetchDataAsync(const QVariantMap &requestData);
 
+        /**
+         * @brief Calculate average daily temperature.
+         * @param variantList - List of weather data points.
+         * @return Average temperature for the day.
+         */
         Q_INVOKABLE int getAvgTemperatureOffTheDay(const QVariantList &variantList) const;
 
+        /**
+         * @brief Get daily temperature range.
+         * @param variantList - List of weather data points.
+         * @return Temperature range as QVariantMap with min/max.
+         */
         Q_INVOKABLE QVariantMap getAvgTemperatureRange(const QVariantList &variantList) const;
     signals:
         /**
-         * @brief Emitted when weather data has been fetched and parsed successfully.
-         * @param fetchResult - The result of the fetch operation.
+         * @brief Notify QML that weather data is ready.
+         * @param fetchResult - Weather data as QVariantMap for QML.
          */
         void weatherFetched(QVariantMap fetchResult);
     private:
-        /**
-         * @brief Pointer to the task manager for running asynchronous operations.
-         */
-        GeneralUtils::TaskManager* _taskManager;
+        WeatherForecastDataProvider* _dataProvider; ///< Weather forecast data provider.
 
         /**
-         * @brief Pointer to the API controller for making network requests.
+         * @brief Calculate min and max temperatures from weather data.
+         * @param data - List of weather data points.
+         * @return Pair of min and max temperatures.
          */
-        WeatherApiController* _apiController;
-
-        WeatherForecastDataStorage _dataStorage;
-
-        bool _verifyOnExpired(const ForecastData& forecastData, const QString& requestResource) const;
-
         QPair<int, int> _getMinMaxTemperatures(QList<WeatherData> data) const;
     private slots:
         /**
-         * @brief Handles data received from the API controller.
-         * @param fetchResult - The result received from the API.
+         * @brief Handle fetched weather data from provider.
+         * @param forecastData - Fetched weather forecast data.
          */
-        void handleDataFromApiFetched(WeatherForecast::FetchResult* fetchResult);
+        void handleDataFetched(const WeatherForecast::ForecastData &forecastData);
     };
 }
 

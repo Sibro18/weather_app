@@ -1,12 +1,11 @@
 #ifndef TASK_MANAGER_H
 #define TASK_MANAGER_H
 
-#include <QObject>
+
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QMutex>
-#include <QList>
 #include <functional>
 #include <QQueue>
 
@@ -18,9 +17,9 @@ namespace GeneralUtils
      */
     enum class Priority
     {
-        High,
-        Normal,
-        Low
+        High,   ///< Highest priority - processed first.
+        Normal, ///< Default priority level.
+        Low     ///< Lowest priority - processed last.
     };
 
     /**
@@ -56,7 +55,6 @@ namespace GeneralUtils
          * @param function - The callable (lambda, functor, or std::function) with no parameters to execute.
          */
         void runAsync(const Priority &p, std::function<void()> &&function);
-
     private:
         /**
          * @brief Mutex to protect access to internal task queues and active task list.

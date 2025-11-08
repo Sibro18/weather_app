@@ -2,17 +2,17 @@
 	"GEO_NAMES": {
 		"API": {
 			"URL": "http://api.geonames.org",
-			"KEY": "Sibro"
+			"KEY": "key"
 		},
 		"FILE_SYSTEM": {
-			"RELATIVE": "data",
-			"ABSOLUTE": ""
+			"RELATIVE": "appdataStorage -> /cache/geo-data",
+			"ABSOLUTE": "absolutePath"
 		}
 	},
 	"WEATHER_FORECAST": {
 		"API": {
 			"URL": "https://api.openweathermap.org",
-			"KEY": "66286377b1d5265be2cd40b16761b858"
+			"KEY": "key"
 		}
 	}
 }

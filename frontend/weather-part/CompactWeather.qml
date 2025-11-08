@@ -9,13 +9,11 @@ Item {
     width: 300
     height: 120
 
-    function getTime(unixDate) {
-        const date = new Date(unixDate * 1000);
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const seconds = date.getSeconds().toString().padStart(2, '0');
+    function getTime(isoDate) {
 
-        return `${hours}:${minutes}:${seconds}`;
+        return isoDate
+         ? isoDate.split(" ")[1]
+         : undefined;
     }
 
     Rectangle {
@@ -47,7 +45,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
 
                 Text {
-                    text: compactWeather.getTime(weatherData.date)
+                    text: compactWeather.getTime(weatherData.date_iso)
                     font.pixelSize: 14
                     font.bold: true
                     color: "#333333"

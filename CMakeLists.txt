@@ -22,30 +22,79 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Network Gui 
 
 # Группировка исходных файлов по логическим секциям
 set(BACKEND_UTILS_SOURCES
-    backend/utils/dbus-service/dbus-service.h
-    backend/utils/dbus-service/dbus-service.cpp
     backend/utils/file-service/file-service.h
     backend/utils/file-service/file-service.cpp
     backend/utils/task-manager/task-manager.h
     backend/utils/task-manager/task-manager.cpp
-    backend/utils/json-serializable/json-serializable.h
-    backend/utils/json-serializable/json-serializable.cpp
     backend/utils/backend-config/backend-config.h
     backend/utils/backend-config/backend-config.cpp
 )
 
-set(API_CONTROLLERS_SOURCES
-    backend/api-controllers/weather-api-controller/weather-api-controller.h
-    backend/api-controllers/weather-api-controller/weather-api-controller.cpp
-    backend/api-controllers/geo-names-api-controller/geo-names-api-controller.h
-    backend/api-controllers/geo-names-api-controller/geo-names-api-controller.cpp
+set(CORE_LAYER_SOURCES
+    backend/core/entities/geo-names/feature-class/feature-class.h
+    backend/core/entities/geo-names/feature-class/feature-class.cpp
+    backend/core/entities/geo-names/fetch-result/fetch-result.h
+    backend/core/entities/geo-names/fetch-result/fetch-result.cpp
+    backend/core/entities/geo-names/location-data/location-data.h
+    backend/core/entities/geo-names/location-data/location-data.cpp
+    backend/core/entities/geo-names/request-data/request-data.h
+    backend/core/entities/geo-names/request-data/request-data.cpp
+
+    backend/core/entities/weather-forecast/fetch-result/fetch-result.h
+    backend/core/entities/weather-forecast/fetch-result/fetch-result.cpp
+    backend/core/entities/weather-forecast/forecast-data/forecast-data.h
+    backend/core/entities/weather-forecast/forecast-data/forecast-data.cpp
+    backend/core/entities/weather-forecast/request-data/request-data.h
+    backend/core/entities/weather-forecast/request-data/request-data.cpp
+    backend/core/entities/weather-forecast/weather-data/weather-data.h
+    backend/core/entities/weather-forecast/weather-data/weather-data.cpp
+
+    backend/core/entities/weather-forecast/weather-sub-structs/pressure-data/pressure-data.h
+    backend/core/entities/weather-forecast/weather-sub-structs/pressure-data/pressure-data.cpp
+    backend/core/entities/weather-forecast/weather-sub-structs/temperature-data/temperature-data.h
+    backend/core/entities/weather-forecast/weather-sub-structs/temperature-data/temperature-data.cpp
+    backend/core/entities/weather-forecast/weather-sub-structs/weather-short-description/weather-short-description.h
+    backend/core/entities/weather-forecast/weather-sub-structs/weather-short-description/weather-short-description.cpp
+    backend/core/entities/weather-forecast/weather-sub-structs/wind-data/wind-data.h
+    backend/core/entities/weather-forecast/weather-sub-structs/wind-data/wind-data.cpp
+
+    backend/core/entities/db-requests/pagination-params.h
+
+    backend/core/interfaces/i-api-controller.h
+    backend/core/interfaces/i-cache-service.h
+    backend/core/interfaces/i-repository.h
+
+    backend/core/base/json-serializable.h
 )
 
-set(MANAGERS_SOURCES
-    backend/managers/geo-names-manager/geo-names-manager.h
-    backend/managers/geo-names-manager/geo-names-manager.cpp
-    backend/managers/weather-forecast-manager/weather-forecast-manager.h
-    backend/managers/weather-forecast-manager/weather-forecast-manager.cpp
+set(INFRASTRUCTURE_LAYER_SOURCES
+    backend/infrastructure/cache/interfaces/i-geo-names-cache-service.h
+
+    backend/infrastructure/cache/geo-names-cache-service/geo-names-cache-service.h
+    backend/infrastructure/cache/geo-names-cache-service/geo-names-cache-service.cpp
+
+    backend/infrastructure/cache/weather-forecast-cache-service/weather-forecast-cache-service.h
+    backend/infrastructure/cache/weather-forecast-cache-service/weather-forecast-cache-service.cpp
+
+    backend/infrastructure/api/weather-api-controller/weather-api-controller.h
+    backend/infrastructure/api/weather-api-controller/weather-api-controller.cpp
+
+    backend/infrastructure/api/geo-names-api-controller/geo-names-api-controller.h
+    backend/infrastructure/api/geo-names-api-controller/geo-names-api-controller.cpp
+
+    backend/infrastructure/api/interfaces/i-locations-api-controller.h
+    backend/infrastructure/api/interfaces/i-weather-api-controller.h
+)
+
+set(APPLICATION_SOURCES
+    backend/application/data-providers/geo-names-data-provider/geo-names-data-provider.h
+    backend/application/data-providers/geo-names-data-provider/geo-names-data-provider.cpp
+    backend/application/data-providers/weather-forecast-data-provider/weather-forecast-data-provider.h
+    backend/application/data-providers/weather-forecast-data-provider/weather-forecast-data-provider.cpp
+
+    backend/application/services/geo-names/i-geo-names-service.h
+    backend/application/services/geo-names/geo-names-file-service/geo-names-file-service.h
+    backend/application/services/geo-names/geo-names-file-service/geo-names-file-service.cpp
 )
 
 set(VIEW_MODELS_SOURCES
@@ -53,43 +102,6 @@ set(VIEW_MODELS_SOURCES
     backend/view-models/geo-names-view-model/geo-names-view-model.cpp
     backend/view-models/weather-forecast-view-model/weather-forecast-view-model.h
     backend/view-models/weather-forecast-view-model/weather-forecast-view-model.cpp
-)
-
-set(DATA_STRUCTS_SOURCES
-    # GeoNames data structs
-    backend/data-structs/geo-names/fetch-result/fetch-result.h
-    backend/data-structs/geo-names/fetch-result/fetch-result.cpp
-    backend/data-structs/geo-names/request-data/request-data.h
-    backend/data-structs/geo-names/request-data/request-data.cpp
-    backend/data-structs/geo-names/geo-parsing-data/geo-parsing-data.h
-    backend/data-structs/geo-names/geo-parsing-data/geo-parsing-data.cpp
-    backend/data-structs/geo-names/feature-class/feature-class.h
-    backend/data-structs/geo-names/feature-class/feature-class.cpp
-
-    # Weather forecast data structs
-    backend/data-structs/weather-forecast/request-data/request-data.h
-    backend/data-structs/weather-forecast/request-data/request-data.cpp
-    backend/data-structs/weather-forecast/weather-data/weather-data.h
-    backend/data-structs/weather-forecast/weather-data/weather-data.cpp
-    backend/data-structs/weather-forecast/fetch-result/fetch-result.h
-    backend/data-structs/weather-forecast/fetch-result/fetch-result.cpp
-
-    # Weather sub-structs
-    backend/data-structs/weather-forecast/weather-sub-structs/wind-data/wind-data.h
-    backend/data-structs/weather-forecast/weather-sub-structs/wind-data/wind-data.cpp
-    backend/data-structs/weather-forecast/weather-sub-structs/temperature-data/temperature-data.h
-    backend/data-structs/weather-forecast/weather-sub-structs/temperature-data/temperature-data.cpp
-    backend/data-structs/weather-forecast/weather-sub-structs/pressure-data/pressure-data.h
-    backend/data-structs/weather-forecast/weather-sub-structs/pressure-data/pressure-data.cpp
-    backend/data-structs/weather-forecast/weather-sub-structs/weather-short-description/weather-short-description.h
-    backend/data-structs/weather-forecast/weather-sub-structs/weather-short-description/weather-short-description.cpp
-)
-
-set(DATA_STORAGE_SOURCES
-    backend/data-storage/weather-forecast-data-storage/weather-forecast-data-storage.h
-    backend/data-storage/weather-forecast-data-storage/weather-forecast-data-storage.cpp
-    backend/data-storage/geo-names-data-storage/geo-names-data-storage.h
-    backend/data-storage/geo-names-data-storage/geo-names-data-storage.cpp
 )
 
 set(QML_SOURCES
@@ -115,11 +127,10 @@ set(RESOURCE_FILES
 # Объединение всех исходных файлов
 set(PROJECT_SOURCES
     ${BACKEND_UTILS_SOURCES}
-    ${API_CONTROLLERS_SOURCES}
-    ${MANAGERS_SOURCES}
+    ${CORE_LAYER_SOURCES}
+    ${INFRASTRUCTURE_LAYER_SOURCES}
+    ${APPLICATION_SOURCES}
     ${VIEW_MODELS_SOURCES}
-    ${DATA_STRUCTS_SOURCES}
-    ${DATA_STORAGE_SOURCES}
     ${QML_SOURCES}
     ${RESOURCE_FILES}
     main.cpp
@@ -164,6 +175,11 @@ target_precompile_headers(${PROJECT_NAME}
     <QString>
     <QDebug>
     <QObject>
+    <QList>
+    <QPair>
+    <QVariantMap>
+    <memory>
+    <optional>
 )
 
 # Установка

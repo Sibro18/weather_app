@@ -37,10 +37,10 @@ Item {
 
     // Functions
     function goDeeper(key) {
-        currentPath.push(key)
-        updatePathText()
-        clearSearch()
-        geoNamesController.fetchDataFromFileSystem(key)
+        currentPath.push(key);
+        updatePathText();
+        clearSearch();
+        geoNamesController.fetchDataByRequestAsync({countryCode: key});
     }
 
     function goBack() {
@@ -112,6 +112,7 @@ Item {
     // Component initialization
     Component.onCompleted: {
         countryList = geoNamesController.getCountryList()
+        console.log(countryList);
         setCurrentListData(countryList)
     }
 
