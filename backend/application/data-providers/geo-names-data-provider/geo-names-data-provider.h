@@ -50,6 +50,12 @@ namespace GeoNames
          * @param fetchResult - Result of GeoNames fetch operation.
          */
         void geoNamesFetched(const GeoNames::FetchResult &fetchResult);
+
+        /**
+         * @brief GeoNames data fetched and ready.
+         * @param fetchResult - Result of GeoNames fetch operation.
+         */
+        void apiErrorOcured(const QString &error);
     private:
         Common::TaskManager* _taskManager;                ///< Task manager for asynchronous operations.
         GeoNames::ILocationsApiController* _apiController;      ///< GeoNames API controller for data fetching.
@@ -61,6 +67,12 @@ namespace GeoNames
          * @param fetchResult - API response data to process.
          */
         void handleDataFromApiFetched(const GeoNames::FetchResult &fetchResult);
+
+        /**
+         * @brief Process API error.
+         * @param error - API error.
+         */
+        void handleApiError(const QString &error);
     };
 }
 

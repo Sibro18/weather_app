@@ -38,6 +38,12 @@ namespace GeoNames
          * @param dataList - Locations data as QVariantMap for QML.
          */
         void locationsFetched(QVariantMap dataList);
+
+        /**
+         * @brief Notify QML that ocure error.
+         * @param error - error in text view.
+         */
+        void errorOccurred(const QString &error);
     private:
         GeoNamesDataProvider* _dataProvider; ///< Data provider for GeoNames operations.
         QMap<RequestData, QVariantMap> _requestsHistory; ///< History of previous requests.
@@ -54,6 +60,12 @@ namespace GeoNames
          * @param fetchResult - Fetched GeoNames data result.
          */
         void dataFetchedHandler(const GeoNames::FetchResult &fetchResult);
+
+        /**
+         * @brief Handle the api error.
+         * @param error - error in text view.
+         */
+        void handleApiError(const QString &error);
     };
 }
 

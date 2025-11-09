@@ -13,8 +13,8 @@ namespace GeoNames
         GeoNames::IGeoNamesService* geoNamesService,
         QObject* parent
     ) : QObject(parent),
-        _apiController(apiController),
         _taskManager(taskManager),
+        _apiController(apiController),
         _geoNamesCacheService(geoNamesCacheService),
         _geoNamesService(geoNamesService)
     {
@@ -23,6 +23,13 @@ namespace GeoNames
             &GeoNames::ILocationsApiController::dataFetched,
             this,
             &GeoNames::GeoNamesDataProvider::handleDataFromApiFetched
+        );
+
+        connect(
+            _apiController,
+            &GeoNames::ILocationsApiController::errorOccurred,
+            this,
+            &GeoNames::GeoNamesDataProvider::handleApiError
         );
     }
     void GeoNamesDataProvider::fetchDataByRequestAsync(GeoNames::RequestData requestData)
@@ -103,6 +110,11 @@ namespace GeoNames
         }
 
         emit geoNamesFetched(fetchResult);
+    }
+
+    void GeoNamesDataProvider::handleApiError(const QString &error)
+    {
+        emit apiErrorOcured(error);
     }
 }
     

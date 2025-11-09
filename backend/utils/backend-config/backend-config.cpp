@@ -14,7 +14,6 @@ namespace Common
 
         if (!file.open(QIODevice::ReadOnly))
         {
-            qDebug() << "Failed to open file:" << file.errorString();
             return false;
         }
 
@@ -25,13 +24,8 @@ namespace Common
 
         if (doc.isNull())
         {
-            qDebug() << "JSON parse error:" << parseError.errorString();
-            qDebug() << "Error at position:" << parseError.offset;
-
             return false;
         }
-
-        qDebug() << "JSON parsed successfully!";
 
         auto setData = [] (ServiceConfig &config, const QJsonObject &object)
         {

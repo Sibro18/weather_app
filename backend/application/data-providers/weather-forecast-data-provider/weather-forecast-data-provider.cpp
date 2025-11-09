@@ -17,7 +17,6 @@ namespace WeatherForecast
             this,
             &WeatherForecast::WeatherForecastDataProvider::handleDataFromApiFetched
         );
-
     }
 
     void WeatherForecastDataProvider::fetchDataByRequestAsync(WeatherForecast::RequestData requestData)

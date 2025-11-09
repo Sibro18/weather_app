@@ -149,7 +149,6 @@ namespace WeatherForecast
         }
         catch(std::exception exception)
         {
-            qDebug() << exception.what();
         }
 
         returnData.windData = WindData::getByVariantMap(data["windData"].toMap());

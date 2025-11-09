@@ -28,8 +28,6 @@ namespace WeatherForecast
 
         if (currentAttempt > MAX_ATTEMPTS)
         {
-            qDebug() << "HALLO!";
-
             emit errorOccurred(
                 errorTemplate.arg("Server not responding")
             );
@@ -48,7 +46,7 @@ namespace WeatherForecast
 
         QNetworkReply* reply = _networkManager.get(networkRequest);
 
-        QTimer::singleShot(1000, reply, [this, reply, requestData, currentAttempt]() mutable {
+        QTimer::singleShot(1000, reply, [this, reply, requestData]() mutable {
             if (!reply->isFinished())
             {
                 reply->abort();

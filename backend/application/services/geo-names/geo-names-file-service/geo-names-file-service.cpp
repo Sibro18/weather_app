@@ -25,8 +25,6 @@ namespace GeoNames
             _dirFilePath = dirFilePath;
         }
 
-        qDebug() << _dirFilePath;
-
         _fileService->createNewDirIfNotExists(_dirFilePath);
     }
 
@@ -43,11 +41,7 @@ namespace GeoNames
         QJsonParseError parseError;
         QJsonDocument doc = QJsonDocument::fromJson(*data, &parseError);
 
-        if (parseError.error != QJsonParseError::NoError)
-        {
-            qDebug() << parseError.errorString();
-        }
-        else if (doc.isObject())
+        if (doc.isObject())
         {
             QJsonObject dataInJson = doc.object();
 
@@ -138,15 +132,11 @@ namespace GeoNames
 
         if (parseError.error != QJsonParseError::NoError)
         {
-            qWarning() << "JSON parse error:" << parseError.errorString();
-
             return QVariantMap();
         }
 
         if (!doc.isObject())
         {
-            qWarning() << "JSON is not an object";
-
             return QVariantMap();
         }
 

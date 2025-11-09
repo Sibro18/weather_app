@@ -34,7 +34,7 @@ namespace GeoNames
          * @brief Emitted when an error occurs during API request.
          * @param error - Human-readable error description.
          */
-        void errorOccurred(QString error);
+        void errorOccurred(const QString &error);
     };
 }
 

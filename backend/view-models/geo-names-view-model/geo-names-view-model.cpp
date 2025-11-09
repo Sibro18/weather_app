@@ -14,6 +14,13 @@ namespace GeoNames
             this,
             &GeoNamesViewModel::dataFetchedHandler
         );
+
+        connect(
+            _dataProvider,
+            &GeoNamesDataProvider::apiErrorOcured,
+            this,
+            &GeoNamesViewModel::handleApiError
+        );
     }
 
     void GeoNamesViewModel::fetchDataByRequestAsync(const QVariantMap &requestData)
@@ -58,6 +65,11 @@ namespace GeoNames
         _requestsHistory[fetchResult.requestData] = returnData;
 
         emit this->locationsFetched(std::move(returnData));
+    }
+
+    void GeoNamesViewModel::handleApiError(const QString &error)
+    {
+        emit errorOccurred(error);
     }
 
     QVariantMap GeoNamesViewModel::_parseFetchedData(const QPair<QString, QList<LocationData>> & data) const

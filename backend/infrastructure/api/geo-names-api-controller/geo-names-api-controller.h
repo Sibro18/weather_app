@@ -63,13 +63,6 @@ namespace GeoNames
         QList<LocationData> _parseResponse(const QJsonDocument& doc, QString& errorString) const;
 
         /**
-         * @brief Logs a message with context.
-         * @param context - Context of the log (e.g., method name and params).
-         * @param message - Message to log.
-         */
-        void _log(const QString& context, const QString& message) const;
-
-        /**
          * @brief Builds URL parameters based on request data.
          * @param requestData - Request parameters.
          * @return URL query string.

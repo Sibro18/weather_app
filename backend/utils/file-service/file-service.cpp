@@ -1,7 +1,6 @@
 #include "file-service.h"
 #include <QFile>
 #include <QSaveFile>
-#include <QDebug>
 #include <QDir>
 
 namespace Common
@@ -23,30 +22,19 @@ namespace Common
             QMutex* fileMutex = _getMutexForFile(path);
             QMutexLocker locker(fileMutex);
 
-            QString baseLogInfo = QString("[FileService].saveData(path: %0)").arg(path);
-            qWarning() << baseLogInfo;
 
             QSaveFile file(path);
 
             if (!file.open(QIODevice::WriteOnly))
             {
-                qWarning() << baseLogInfo << "\taccess error: " << file.errorString();
-
                 continue;
             }
 
             if (file.write(data) != data.size())
             {
-                qWarning() << baseLogInfo << "\twriting error: " << file.errorString();
-
                 file.cancelWriting();
 
                 continue;
-            }
-
-            if (!file.commit())
-            {
-                qWarning() << baseLogInfo << "\tcommit error: " << file.errorString();
             }
         }
     }
@@ -58,12 +46,8 @@ namespace Common
 
         QFile file(filePath);
 
-        QString baseLogInfo = QString("[FileService].getData(path: %0)").arg(filePath);
-
         if (!file.open(QIODevice::ReadOnly))
         {
-            qWarning() << baseLogInfo << "\taccess error: " << file.errorString();
-
             return {};
         }
 
@@ -85,23 +69,18 @@ namespace Common
     bool FileService::createNewDirIfNotExists(const QString &path) const
     {
         if (path.trimmed().isEmpty()) {
-            qWarning() << "[FileService] Empty path provided";
             return false;
         }
 
         QDir dir(path);
 
         if (dir.exists()) {
-            qInfo() << "[FileService] Directory already exists:" << path;
             return true;
         }
 
         if (!dir.mkpath(".")) {
-            qWarning() << "[FileService] Failed to create directory:" << path;
             return false;
         }
-
-        qInfo() << "[FileService] Directory created:" << path;
 
         return true;
     }

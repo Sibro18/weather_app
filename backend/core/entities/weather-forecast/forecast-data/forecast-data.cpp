@@ -22,26 +22,24 @@ namespace WeatherForecast
         if (fiveDaysForecast != std::nullopt)
         {
             QList<WeatherData> forecast = fiveDaysForecast.value().second;
-            QMap<QString, QVariantList> daysMap; // ключ - дата, значение - список прогнозов
+            QMap<QString, QVariantList> daysMap;
 
-            // Группируем прогнозы по дням
             for (const auto& weatherData : forecast)
             {
                 if (weatherData.dateIsoFormat)
                 {
-                    QString date = weatherData.dateIsoFormat->split(" ")[0]; // берем только дату
+                    QString date = weatherData.dateIsoFormat->split(" ")[0];
                     daysMap[date].append(weatherData.toVariantMap());
                 }
             }
 
-            // Формируем результат для 5 дней
             QVariantList fiveDaysForecastVariant;
             int dayCount = 0;
 
             for (auto it = daysMap.begin(); it != daysMap.end() && dayCount < 5; ++it, ++dayCount)
             {
                 QVariantMap dayObject;
-                dayObject["name"] = it.key(); // дата в формате "21.01.2025"
+                dayObject["name"] = it.key();
                 dayObject["items"] = it.value();
                 fiveDaysForecastVariant.append(dayObject);
             }

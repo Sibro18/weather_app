@@ -1,26 +1,46 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(weather-app VERSION 0.1 LANGUAGES CXX)
 
-# Настройки компилятора и кэша
-set(CMAKE_C_COMPILER_LAUNCHER ccache)
-set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+# =============================================================================
+# Configuration and Compiler Settings
+# =============================================================================
 
-# Автоматизация Qt
+# Use ccache if available for faster rebuilds
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+endif()
+
+# Qt Automation
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# Стандарт C++
+# C++ Standard
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Поиск Qt
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Network Gui Qml Quick)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Network Gui Qml Quick)
+# Build type configuration
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
-# Группировка исходных файлов по логическим секциям
+# =============================================================================
+# Qt Dependencies
+# =============================================================================
+
+set(QT_COMPONENTS Core Widgets Network Gui Qml Quick)
+
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS ${QT_COMPONENTS})
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
+
+# =============================================================================
+# Source Files Organization
+# =============================================================================
+
+# Backend Utilities
 set(BACKEND_UTILS_SOURCES
     backend/utils/file-service/file-service.h
     backend/utils/file-service/file-service.cpp
@@ -30,6 +50,7 @@ set(BACKEND_UTILS_SOURCES
     backend/utils/backend-config/backend-config.cpp
 )
 
+# Core Domain Entities
 set(CORE_LAYER_SOURCES
     backend/core/entities/geo-names/feature-class/feature-class.h
     backend/core/entities/geo-names/feature-class/feature-class.cpp
@@ -59,26 +80,22 @@ set(CORE_LAYER_SOURCES
     backend/core/entities/weather-forecast/weather-sub-structs/wind-data/wind-data.cpp
 
     backend/core/entities/db-requests/pagination-params.h
-
     backend/core/interfaces/i-api-controller.h
     backend/core/interfaces/i-cache-service.h
     backend/core/interfaces/i-repository.h
-
     backend/core/base/json-serializable.h
 )
 
+# Infrastructure Layer
 set(INFRASTRUCTURE_LAYER_SOURCES
     backend/infrastructure/cache/interfaces/i-geo-names-cache-service.h
-
     backend/infrastructure/cache/geo-names-cache-service/geo-names-cache-service.h
     backend/infrastructure/cache/geo-names-cache-service/geo-names-cache-service.cpp
-
     backend/infrastructure/cache/weather-forecast-cache-service/weather-forecast-cache-service.h
     backend/infrastructure/cache/weather-forecast-cache-service/weather-forecast-cache-service.cpp
 
     backend/infrastructure/api/weather-api-controller/weather-api-controller.h
     backend/infrastructure/api/weather-api-controller/weather-api-controller.cpp
-
     backend/infrastructure/api/geo-names-api-controller/geo-names-api-controller.h
     backend/infrastructure/api/geo-names-api-controller/geo-names-api-controller.cpp
 
@@ -86,6 +103,7 @@ set(INFRASTRUCTURE_LAYER_SOURCES
     backend/infrastructure/api/interfaces/i-weather-api-controller.h
 )
 
+# Application Layer
 set(APPLICATION_SOURCES
     backend/application/data-providers/geo-names-data-provider/geo-names-data-provider.h
     backend/application/data-providers/geo-names-data-provider/geo-names-data-provider.cpp
@@ -97,6 +115,7 @@ set(APPLICATION_SOURCES
     backend/application/services/geo-names/geo-names-file-service/geo-names-file-service.cpp
 )
 
+# View Models
 set(VIEW_MODELS_SOURCES
     backend/view-models/geo-names-view-model/geo-names-view-model.h
     backend/view-models/geo-names-view-model/geo-names-view-model.cpp
@@ -104,80 +123,73 @@ set(VIEW_MODELS_SOURCES
     backend/view-models/weather-forecast-view-model/weather-forecast-view-model.cpp
 )
 
-set(QML_SOURCES
-    frontend/main.qml
-    frontend/weather-part/DetailedWeather.qml
-    frontend/weather-part/WeatherDetail.qml
-    frontend/weather-part/HourForecastItem.qml
-    frontend/weather-part/CompactDetail.qml
-    frontend/weather-part/CompactWeather.qml
-    frontend/weather-part/WeatherMain.qml
-    frontend/falling-list/FallingList.qml
-    frontend/falling-list/FallingListDirItem.qml
-    frontend/falling-list/FallingListItem.qml
-    frontend/falling-list/falling-list-logic.js
-    frontend/SearchDialog.qml
-)
-
-# Ресурсы
+# Resources
 set(RESOURCE_FILES
     resources.qrc
 )
 
-# Объединение всех исходных файлов
+# =============================================================================
+# Executable Target
+# =============================================================================
+
+# Combine all source files
 set(PROJECT_SOURCES
     ${BACKEND_UTILS_SOURCES}
     ${CORE_LAYER_SOURCES}
     ${INFRASTRUCTURE_LAYER_SOURCES}
     ${APPLICATION_SOURCES}
     ${VIEW_MODELS_SOURCES}
-    ${QML_SOURCES}
     ${RESOURCE_FILES}
     main.cpp
 )
 
-# Создание исполняемого файла
+# Create executable with modern Qt approach
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    find_package(Qt6 REQUIRED COMPONENTS Core)
-
     qt_add_executable(${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 
-target_link_libraries(weather-app PRIVATE Qt6::Core)
-
+    # Link Qt6 libraries
     target_link_libraries(${PROJECT_NAME}
         PRIVATE
-        Qt6::Core
-        Qt6::Widgets
-        Qt6::Network
-        Qt6::Gui
-        Qt6::Qml
-        Qt6::Quick
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Network
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Qml
+        Qt${QT_VERSION_MAJOR}::Quick
     )
+
+    # Finalize Qt6 executable
+    qt_finalize_executable(${PROJECT_NAME})
 else()
+    # Qt5 approach
     add_executable(${PROJECT_NAME}
         ${PROJECT_SOURCES}
     )
 
+    # Link Qt5 libraries
     target_link_libraries(${PROJECT_NAME}
         PRIVATE
-        Qt5::Core
-        Qt5::Widgets
-        Qt5::Network
-        Qt5::Gui
-        Qt5::Qml
-        Qt5::Quick
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Network
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Qml
+        Qt${QT_VERSION_MAJOR}::Quick
     )
 endif()
 
-# Предкомпилированные заголовки
+# =============================================================================
+# Target Properties and Optimizations
+# =============================================================================
+
+# Precompiled headers for faster compilation
 target_precompile_headers(${PROJECT_NAME}
     PRIVATE
     <QWidget>
     <QString>
-    <QDebug>
     <QObject>
     <QList>
     <QPair>
@@ -186,15 +198,50 @@ target_precompile_headers(${PROJECT_NAME}
     <optional>
 )
 
-# Установка
+# Compiler-specific optimizations
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        -O2
+    )
+endif()
+
+# Platform-specific settings
+if(UNIX AND NOT APPLE)
+    # Linux-specific settings
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        LINUX_BUILD
+    )
+endif()
+
+# =============================================================================
+# Installation
+# =============================================================================
+
 include(GNUInstallDirs)
+
 install(TARGETS ${PROJECT_NAME}
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-# Финальная настройка для Qt6
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(${PROJECT_NAME})
-endif()
+# =============================================================================
+# Optional: Testing Configuration (if you add tests later)
+# =============================================================================
+
+# option(BUILD_TESTS "Build tests" OFF)
+# if(BUILD_TESTS)
+#     enable_testing()
+#     add_subdirectory(tests)
+# endif()
+
+# =============================================================================
+# Optional: Packaging Configuration (for creating .deb or other packages)
+# =============================================================================
+
+# set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+# set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+# include(CPack)

@@ -1,6 +1,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <QJsonDocument>
 #include <QPointer>
+#include <QTimer>
 
 
 #include "geo-names-api-controller.h"
@@ -14,12 +15,10 @@ namespace GeoNames
 
     void GeoNamesApiController::fetchData(RequestData requestData)
     {
-        const QString errorTemplate = "GeoNamesApiController::fetchData => %1";
-
         if (requestData.countryCode.isEmpty())
         {
             emit errorOccurred(
-                errorTemplate.arg("Country code is empty!")
+                "Country code is empty in request!"
             );
 
             return;
@@ -30,14 +29,33 @@ namespace GeoNames
 
         QNetworkReply *reply = _manager.get(request);
 
-        connect(reply, &QNetworkReply::finished, this, [this, reply, requestData = std::move(requestData), errorTemplate = std::move(errorTemplate)]()
+        QTimer::singleShot(2000, reply, [reply]() mutable {
+            if (!reply->isFinished())
+            {
+                reply->setProperty("customError", "Request timeout after 2 seconds");
+                reply->abort();
+            }
+        });
+
+        connect(reply, &QNetworkReply::finished, this, [this, reply, requestData = std::move(requestData)]()
         {
+            if (reply->property("customError").isValid())
+            {
+                QString error = reply->property("customError").toString();
+
+                emit errorOccurred(error);
+
+                return;
+            }
+
+
             QString errorString = reply->error() == QNetworkReply::NoError
              ? ""
              :reply->errorString();
 
             if (!errorString.isEmpty()) {
-                QMetaObject::invokeMethod(this, [this, error = errorTemplate.arg(errorString)]() {
+
+                QMetaObject::invokeMethod(this, [this, error = std::move(errorString)]() {
                     emit errorOccurred(error);
                 }, Qt::QueuedConnection);
 
@@ -46,9 +64,8 @@ namespace GeoNames
 
             _taskManager->runAsync(Common::Priority::High, [
                 controller = QPointer<GeoNamesApiController>(this),
-                payload = std::move(reply->readAll()),
-                requestData = std::move(requestData),
-                errorTemplate = std::move(errorTemplate)
+                payload = reply->readAll(),
+                requestData = std::move(requestData)
             ] ()
             {
                 if (!controller)
@@ -60,8 +77,8 @@ namespace GeoNames
 
                 fetchResult.data.first = requestData.countryCode;
                 fetchResult.requestData = std::move(requestData);
-
                 QString error = "";
+
                 controller->_handleRequestPayload(payload, fetchResult, error);
 
                 QMetaObject::invokeMethod(controller, [controller, fetchResult = std::move(fetchResult), error = std::move(error)]() {
@@ -98,8 +115,6 @@ namespace GeoNames
 
         if (jsonError.error != QJsonParseError::NoError)
         {
-            qDebug() << jsonError.errorString();
-
             errorString = jsonError.errorString();
         }
 
@@ -136,11 +151,6 @@ namespace GeoNames
         }
 
         return LocationData::fromJsonArray(arrVal->toArray());
-    }
-
-    void GeoNamesApiController::_log(const QString& context, const QString& message) const
-    {
-        qWarning() << QString("[GeoNamesApiController].%1").arg(context) << "\t" << message;
     }
 
     QString GeoNamesApiController::_getFilledUrlParamsByRequest(const RequestData &requestData) const
