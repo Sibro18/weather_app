@@ -2,7 +2,7 @@
 #define BACKEND_CONFIG_H
 
 
-namespace GeneralUtils
+namespace Common
 {
     /**
      * @brief Centralized configuration manager for backend services.

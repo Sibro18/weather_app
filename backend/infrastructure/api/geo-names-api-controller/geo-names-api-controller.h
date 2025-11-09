@@ -25,8 +25,8 @@ namespace GeoNames
          * @param parent - Parent QObject.
          */
         explicit GeoNamesApiController(
-            GeneralUtils::TaskManager* taskManager,
-            GeneralUtils::BackendConfig::ApiConfig apiConfig,
+            Common::TaskManager* taskManager,
+            Common::BackendConfig::ApiConfig apiConfig,
             QObject* parent = nullptr
         );
 
@@ -37,8 +37,8 @@ namespace GeoNames
         void fetchData(GeoNames::RequestData requestData) override;
     private:
         QNetworkAccessManager _manager; ///< Manager for network requests.
-        GeneralUtils::TaskManager* _taskManager; ///< Network manager for handling HTTP requests.
-        GeneralUtils::BackendConfig::ApiConfig _apiConfig; ///< Config for API.
+        Common::TaskManager* _taskManager; ///< Network manager for handling HTTP requests.
+        Common::BackendConfig::ApiConfig _apiConfig; ///< Config for API.
 
         /**
          * @brief get builded request URL.

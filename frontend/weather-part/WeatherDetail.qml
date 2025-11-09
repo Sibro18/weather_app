@@ -1,37 +1,41 @@
 import QtQuick 6.5
-import QtQuick.Layouts
 
-RowLayout {
+Row {
     property string icon: ""
     property string label: ""
     property string value: ""
-    property bool mainValue: false
-    property bool compactMode: false
+    property bool highlighted: false
+    property real itemWidth: 200
 
-    spacing: compactMode ? 6 : 10
+    width: itemWidth
+    spacing: 8
 
     Text {
         text: icon
-        font.pixelSize: compactMode ? 14 : 16
-        Layout.preferredWidth: compactMode ? 20 : 24
+        font.pixelSize: 20
+        width: 24
     }
 
     Column {
+        width: parent.width - 32
         spacing: 2
-        Layout.fillWidth: true
 
         Text {
             text: label
-            font.pixelSize: compactMode ? 10 : 12
-            font.weight: Font.Normal
-            color: "#78909c"
+            font.pixelSize: 14
+            color: highlighted ? "#e53935" : "#78909c"
+            font.weight: Font.Medium
+            width: parent.width
+            elide: Text.ElideRight
         }
 
         Text {
             text: value
-            font.pixelSize: compactMode ? 12 : 14
-            font.weight: mainValue ? Font.Bold : Font.Medium
-            color: mainValue ? "#d32f2f" : "#37474f"
+            font.pixelSize: 16
+            font.bold: true
+            color: highlighted ? "#e53935" : "#37474f"
+            width: parent.width
+            elide: Text.ElideRight
         }
     }
 }

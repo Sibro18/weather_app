@@ -8,7 +8,7 @@
 
 namespace GeoNames
 {
-    GeoNamesFileService::GeoNamesFileService(GeneralUtils::FileService* fileService, QPair<QString, bool> dirFilePathData, QObject* parent)
+    GeoNamesFileService::GeoNamesFileService(Common::FileService* fileService, QPair<QString, bool> dirFilePathData, QObject* parent)
         :
         QObject(parent),
         _fileService(fileService)

@@ -3,59 +3,41 @@ import QtQuick.Controls
 
 Rectangle {
     property var forecastData: ({})
-    property bool expanded: false
 
     width: parent.width
-    height: expanded
-     ? 350
-     : 80
-    color: expanded
-     ? "#f8f9fa"
-     : "#ffffff"
-    radius: 8
-    border.color: expanded
-     ? "#4a90e2"
-     : "#e0e0e0"
-    border.width: expanded
-     ? 2
-     : 1
+    height: 80
+    radius: 12
+    color: mouseArea.containsMouse ? "#f8f9fa" : "#ffffff"
+    border.color: mouseArea.containsMouse ? "#4a90e2" : "#e0e0e0"
+    border.width: 1
 
-    Behavior on height {
-        NumberAnimation { duration: 200 }
-    }
+    layer.enabled: true
 
-    // Компактный вид (свёрнутый)
     CompactWeather {
         anchors.fill: parent
         anchors.margins: 4
-        visible: !expanded
         weatherData: forecastData
     }
 
-    // Подробный вид (развёрнутый) - компактный режим
-    CurrentWeather {
-        anchors.fill: parent
-        anchors.margins: 4
-        visible: expanded
+    // Details modal
+    DetailedWeather {
+        id: detailsModal
         weatherData: forecastData
-        compactMode: true  // Включаем компактный режим для списка
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
-        onClicked: expanded = !expanded
+        onClicked: detailsModal.open()
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
     }
 
-    Text {
-        anchors {
-            right: parent.right
-            bottom: parent.bottom
-            margins: 6
-        }
-        text: expanded ? "▲" : "▼"
-        font.pixelSize: 10
-        color: "#999999"
-        visible: !expanded
+    Behavior on color {
+        ColorAnimation { duration: 200 }
+    }
+
+    Behavior on border.color {
+        ColorAnimation { duration: 200 }
     }
 }

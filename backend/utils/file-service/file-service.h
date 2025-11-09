@@ -7,7 +7,7 @@
 #include <QMutex>
 
 
-namespace GeneralUtils
+namespace Common
 {
     /**
      * @brief Thread-safe file system service.

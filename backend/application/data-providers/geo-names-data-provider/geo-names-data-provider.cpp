@@ -8,7 +8,7 @@ namespace GeoNames
 {
     GeoNamesDataProvider::GeoNamesDataProvider(
         GeoNames::ILocationsApiController* apiController,
-        GeneralUtils::TaskManager* taskManager,
+        Common::TaskManager* taskManager,
         GeoNames::IGeoNamesCacheService* geoNamesCacheService,
         GeoNames::IGeoNamesService* geoNamesService,
         QObject* parent
@@ -28,7 +28,7 @@ namespace GeoNames
     void GeoNamesDataProvider::fetchDataByRequestAsync(GeoNames::RequestData requestData)
     {
         _taskManager->runAsync(
-            GeneralUtils::Priority::Normal,
+            Common::Priority::Normal,
             [
                 controller = QPointer<GeoNamesDataProvider>(this),
                 requestData = std::move(requestData)

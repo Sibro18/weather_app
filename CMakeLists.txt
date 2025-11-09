@@ -106,7 +106,7 @@ set(VIEW_MODELS_SOURCES
 
 set(QML_SOURCES
     frontend/main.qml
-    frontend/weather-part/CurrentWeather.qml
+    frontend/weather-part/DetailedWeather.qml
     frontend/weather-part/WeatherDetail.qml
     frontend/weather-part/HourForecastItem.qml
     frontend/weather-part/CompactDetail.qml
@@ -138,10 +138,14 @@ set(PROJECT_SOURCES
 
 # Создание исполняемого файла
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+
     qt_add_executable(${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
+
+target_link_libraries(weather-app PRIVATE Qt6::Core)
 
     target_link_libraries(${PROJECT_NAME}
         PRIVATE

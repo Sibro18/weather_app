@@ -6,7 +6,7 @@
 #include "backend-config.h"
 
 
-namespace GeneralUtils
+namespace Common
 {
     bool BackendConfig::load(const QString& filename)
     {

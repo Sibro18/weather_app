@@ -12,8 +12,6 @@
 #include "backend/application/data-providers/weather-forecast-data-provider/weather-forecast-data-provider.h"
 #include "backend/view-models/weather-forecast-view-model/weather-forecast-view-model.h"
 
-// #include "backend/view-models/weather-forecast-view-model/weather-forecast-view-model.h"
-
 #include "backend/utils/backend-config/backend-config.h"
 #include "backend/utils/file-service/file-service.h"
 
@@ -25,20 +23,20 @@ int main(int argc, char *argv[])
 {
     QGuiApplication* app(new QGuiApplication {argc, argv});
 
-    GeneralUtils::BackendConfig::load(":/configs/backend");
+    Common::BackendConfig::load(":/configs/backend");
 
-    GeneralUtils::TaskManager* taskManager = new GeneralUtils::TaskManager(app);
-    GeneralUtils::FileService* fileService = new GeneralUtils::FileService(app);
+    Common::TaskManager* taskManager = new Common::TaskManager(app);
+    Common::FileService* fileService = new Common::FileService(app);
 
     GeoNames::GeoNamesCacheService* geoCacheService = new GeoNames::GeoNamesCacheService(app);
     GeoNames::GeoNamesApiController* geoApiController = new GeoNames::GeoNamesApiController(
         taskManager,
-        GeneralUtils::BackendConfig::geoNames().api,
+        Common::BackendConfig::geoNames().api,
         app
     );
     GeoNames::GeoNamesFileService* geoFileService = new GeoNames::GeoNamesFileService(
         fileService,
-        { GeneralUtils::BackendConfig::geoNames().fileSystem.relativePath, false },
+        { Common::BackendConfig::geoNames().fileSystem.relativePath, false },
         app
     );
     GeoNames::GeoNamesDataProvider* geoNamesBridge = new GeoNames::GeoNamesDataProvider(
@@ -55,7 +53,7 @@ int main(int argc, char *argv[])
 
     WeatherForecast::WeatherApiController* weatherApiController = new WeatherForecast::WeatherApiController(
         taskManager,
-        GeneralUtils::BackendConfig::weatherForecast().api,
+        Common::BackendConfig::weatherForecast().api,
         app
     );
     WeatherForecast::WeatherForecastCacheService* weatherDataStorage = new WeatherForecast::WeatherForecastCacheService(app);

@@ -27,7 +27,7 @@ namespace GeoNames
          */
         explicit GeoNamesDataProvider(
             GeoNames::ILocationsApiController* apiController,
-            GeneralUtils::TaskManager* taskManager,
+            Common::TaskManager* taskManager,
             GeoNames::IGeoNamesCacheService* geoNamesCacheService,
             GeoNames::IGeoNamesService* geoNamesService,
             QObject* parent = nullptr
@@ -51,7 +51,7 @@ namespace GeoNames
          */
         void geoNamesFetched(const GeoNames::FetchResult &fetchResult);
     private:
-        GeneralUtils::TaskManager* _taskManager;                ///< Task manager for asynchronous operations.
+        Common::TaskManager* _taskManager;                ///< Task manager for asynchronous operations.
         GeoNames::ILocationsApiController* _apiController;      ///< GeoNames API controller for data fetching.
         GeoNames::IGeoNamesCacheService* _geoNamesCacheService; ///< Cache service for GeoNames data.
         GeoNames::IGeoNamesService* _geoNamesService;           ///< GeoNames data service.

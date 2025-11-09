@@ -23,7 +23,7 @@ namespace GeoNames
          *      second: isAbsolute. for Absoule paths.
          * @param parent - Parent object.
          */
-        GeoNamesFileService(GeneralUtils::FileService* fileService, QPair<QString, bool> dirFilePathData, QObject* parent = nullptr);
+        GeoNamesFileService(Common::FileService* fileService, QPair<QString, bool> dirFilePathData, QObject* parent = nullptr);
 
         /**
          * @brief Retrieve geographical locations for a specific country from file storage.
@@ -47,7 +47,7 @@ namespace GeoNames
          */
         void addCountryLocations(QString countryCode, QList<LocationData> newLocations) override;
     private:
-        GeneralUtils::FileService* _fileService; ///< File operations utility
+        Common::FileService* _fileService; ///< File operations utility
         QString _dirFilePath;                    ///< Directory path for country data files
 
         /**

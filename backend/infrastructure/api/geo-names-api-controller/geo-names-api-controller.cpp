@@ -8,8 +8,8 @@
 
 namespace GeoNames
 {
-    GeoNamesApiController::GeoNamesApiController(GeneralUtils::TaskManager* taskManager , GeneralUtils::BackendConfig::ApiConfig apiConfig, QObject* parent)
-        : GeoNames::ILocationsApiController(parent), _taskManager(taskManager), _apiConfig(apiConfig)
+    GeoNamesApiController::GeoNamesApiController(Common::TaskManager* taskManager , Common::BackendConfig::ApiConfig apiConfig, QObject* parent)
+        : GeoNames::ILocationsApiController(parent), _taskManager(taskManager), _apiConfig(std::move(apiConfig))
     {}
 
     void GeoNamesApiController::fetchData(RequestData requestData)
@@ -44,7 +44,7 @@ namespace GeoNames
                 return;
             }
 
-            _taskManager->runAsync(GeneralUtils::Priority::High, [
+            _taskManager->runAsync(Common::Priority::High, [
                 controller = QPointer<GeoNamesApiController>(this),
                 payload = std::move(reply->readAll()),
                 requestData = std::move(requestData),

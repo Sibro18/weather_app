@@ -2,7 +2,7 @@
 #include <QPointer>
 
 
-namespace GeneralUtils
+namespace Common
 {
     TaskManager::TaskManager(QObject *parent)
         : QObject{parent}

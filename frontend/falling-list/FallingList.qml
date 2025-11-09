@@ -8,7 +8,6 @@ Item {
     width: 300
     height: 400
 
-    // Properties
     property var currentPath: []
     property var countryList: []
     property var currentListModel: []
@@ -19,7 +18,6 @@ Item {
     property string searchText: ""
     property bool searchActive: false
 
-    // Style properties
     readonly property int preferButtonHeight: 40
     readonly property int defaultSpacing: 10
     readonly property int buttonRadius: 8
@@ -31,11 +29,9 @@ Item {
     readonly property color backgroundColor: "#f0f0f0"
     readonly property color textColor: "#666666"
 
-    // Signals
     signal citySelected(var leafData, var leafPath)
     signal countrySelected(var countryName)
 
-    // Functions
     function goDeeper(key) {
         currentPath.push(key);
         updatePathText();
@@ -109,19 +105,15 @@ Item {
         }
     }
 
-    // Component initialization
     Component.onCompleted: {
         countryList = geoNamesController.getCountryList()
-        console.log(countryList);
         setCurrentListData(countryList)
     }
 
-    // Main layout
     Column {
         anchors.fill: parent
         spacing: defaultSpacing
 
-        // Navigation buttons
         RowLayout {
             width: parent.width
             height: 50
@@ -131,7 +123,7 @@ Item {
                 id: backButton
                 Layout.fillWidth: true
                 Layout.preferredHeight: preferButtonHeight
-                text: "◀ Назад"
+                text: "◀ Back"
                 enabled: backButtonEnabled
                 onClicked: root.goBack()
 
@@ -140,6 +132,7 @@ Item {
                         (backButton.down ? primaryDarkColor : primaryColor) :
                         disabledColor
                     radius: buttonRadius
+                    opacity: backButton.enabled ? 1 : 0.6
                 }
 
                 contentItem: Text {
@@ -149,13 +142,17 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 200 }
+                }
             }
 
             Button {
                 id: addButton
                 Layout.fillWidth: true
                 Layout.preferredHeight: preferButtonHeight
-                text: "➕ Добавить"
+                text: "➕ Add"
                 onClicked: searchDialog.open()
 
                 background: Rectangle {
@@ -173,7 +170,6 @@ Item {
             }
         }
 
-        // Search section
         RowLayout {
             width: parent.width
             height: 40
@@ -183,18 +179,24 @@ Item {
                 id: searchField
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
-                placeholderText: "Поиск..."
-                onTextChanged: {
-                    searchText = text
-                }
+                placeholderText: "Search..."
+                font.pixelSize: 14
+                onTextChanged: searchText = text
                 onAccepted: performSearch()
+
+                background: Rectangle {
+                    color: "white"
+                    radius: buttonRadius
+                    border.color: primaryColor
+                    border.width: 1
+                }
             }
 
             Button {
                 id: searchButton
-                Layout.preferredWidth: 60
+                Layout.preferredWidth: 80
                 Layout.preferredHeight: 40
-                text: "Найти"
+                text: "Search"
                 onClicked: performSearch()
 
                 background: Rectangle {
@@ -205,14 +207,14 @@ Item {
                 contentItem: Text {
                     text: searchButton.text
                     color: "white"
-                    font.pixelSize: 12
+                    font.pixelSize: 14
+                    font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
             }
         }
 
-        // Search info display (visible only when searching)
         Rectangle {
             width: parent.width
             height: 30
@@ -223,7 +225,7 @@ Item {
             Text {
                 anchors.fill: parent
                 anchors.margins: 5
-                text: `Поиск: "${searchText}" (найдено: ${currentListModel.length})`
+                text: `Search: "${searchText}" (found: ${currentListModel.length})`
                 font.pixelSize: 12
                 color: "#1976d2"
                 elide: Text.ElideRight
@@ -231,33 +233,43 @@ Item {
             }
         }
 
-        // List view
-        Item {
+        Rectangle {
             width: parent.width
             height: parent.height - (searchActive ? 170 : 140)
+            color: "transparent"
 
             ListView {
                 id: currentListView
                 anchors.fill: parent
                 model: currentListModel
-                spacing: defaultSpacing / 2
+                spacing: 5
                 clip: true
 
                 delegate: Loader {
                     width: parent.width
                     height: 50
-
                     sourceComponent: modelData.items ? dirDelegate : cityDelegate
 
                     property string key: modelData.key
                     property string mainTitle: modelData.mainTitle
                     property string secondTitle: modelData.secondTitle || ""
                     property var itemData: modelData.data || {}
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 300 }
+                    }
+                }
+
+                add: Transition {
+                    NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 400 }
+                }
+
+                remove: Transition {
+                    NumberAnimation { properties: "opacity"; to: 0; duration: 300 }
                 }
             }
         }
 
-        // Path display (visible only when not searching)
         Rectangle {
             width: parent.width
             height: 30
@@ -273,11 +285,11 @@ Item {
                 color: textColor
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
+                font.bold: true
             }
         }
     }
 
-    // Delegates
     Component {
         id: dirDelegate
         FallingListDirItem {
@@ -295,16 +307,13 @@ Item {
         }
     }
 
-    // Search dialog
     MainDir.SearchDialog {
         id: searchDialog
         onSearchRequested: function(requestData) {
-            console.log("Запуск поиска:", requestData)
             geoNamesController.fetchDataByRequestAsync(requestData)
         }
     }
 
-    // Controller connections
     Connections {
         target: geoNamesController
         function onLocationsFetched(dataList) {

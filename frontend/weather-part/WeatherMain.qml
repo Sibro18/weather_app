@@ -1,96 +1,29 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-
 
 Item {
     id: weatherMain
     property var currentHour: ({})
     property var currentDayModel: []
     property var dayList: []
-    property var mockDayList: [
-        {
-            name: "Сегодня",
-            items: [
-                {
-                    date: 1755702000,
-                    temperatureData: { temperature: 22, min: 18, max: 25, feelsLike: 24 },
-                    windData: { speed: 3, degrees: 180, gust: 5 },
-                    pressureData: { seaLevel: 760, groundLevel: 758 },
-                    shortDescription: "Clear",
-                    humidity: 45,
-                    visibility: 10,
-                    clouds: 10,
-                    rain: { quantity: 0, metric: "mm" },
-                    snow: { quantity: 0, metric: "mm" }
-                },
-                {
-                    date: 1755712800,
-                    temperatureData: { temperature: 19, min: 16, max: 21, feelsLike: 18 },
-                    windData: { speed: 12, degrees: 150, gust: 18 },
-                    pressureData: { seaLevel: 755, groundLevel: 752 },
-                    shortDescription: "Cloudy",
-                    humidity: 65,
-                    visibility: 8,
-                    clouds: 70,
-                    rain: { quantity: 0, metric: "mm" },
-                    snow: { quantity: 0, metric: "mm" }
-                },
-                {
-                    date: 1755723600,
-                    temperatureData: { temperature: -5, min: -8, max: -2, feelsLike: -10 },
-                    windData: { speed: 7, degrees: 300, gust: 12 },
-                    pressureData: { seaLevel: 780, groundLevel: 778 },
-                    shortDescription: "Snow",
-                    humidity: 75,
-                    visibility: 3,
-                    clouds: 100,
-                    rain: { quantity: 0, metric: "mm" },
-                    snow: { quantity: 1.8, metric: "mm" }
-                }
-            ]
-        },
-        {
-            name: "Завтра",
-            items: [
-                {
-                    date: 1755734400,
-                    temperatureData: { temperature: 15, min: 12, max: 17, feelsLike: 14 },
-                    windData: { speed: 5, degrees: 240, gust: 8 },
-                    pressureData: { seaLevel: 745, groundLevel: 742 },
-                    shortDescription: "Rainy",
-                    humidity: 85,
-                    visibility: 6,
-                    clouds: 95,
-                    rain: { quantity: 2.5, metric: "mm" },
-                    snow: { quantity: 0, metric: "mm" }
-                }
-            ]
-        }
-    ]
-
-    Component.onCompleted: {
-        //setDayList(mockDayList); // Инициализация моками
-    }
+    property string in_currentCity: ""
+    property string in_currentRegion: ""
 
     function setDayList(p_dayList) {
-        dayList = p_dayList;
+        dayList = p_dayList
     }
 
     function setCurrentHour(p_currentHour) {
-        currentHour = p_currentHour;
+        currentHour = p_currentHour
     }
 
-    function getMedianTemperature(index) {
-        const items = dayList[index].items;
-
-        return weatherForecastController.getAvgTemperatureOffTheDay(dayList[index]?.items || []);
-    }
-
-    function getTemperatureRangeString(index) {
-        const temperatureData = weatherForecastController.getAvgTemperatureRange(dayList[index]?.items || []);
-
-        return temperatureData.min + "°C - " + temperatureData.max + "°C";
+    function getDayOfWeek(dateString) {
+        const date = new Date(dateString)
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        let day = date.getDay();
+        day = day + 1 === 7 ? 0 : day + 1;
+        return days[day];
     }
 
     ColumnLayout {
@@ -98,73 +31,104 @@ Item {
         anchors.margins: 10
         spacing: 10
 
-        // Меню с карточками дней
+        Text {
+            id: cityText
+            text: in_currentCity
+            font.pixelSize: 20
+            font.bold: true
+            color: "#333"
+            Layout.alignment: Qt.AlignHCenter
+
+            Behavior on text {
+                PropertyAnimation { duration: 300 }
+            }
+        }
+
+        Text {
+            id: regionText
+            text: in_currentRegion
+            font.pixelSize: 16
+            color: "#666"
+            Layout.alignment: Qt.AlignHCenter
+
+            Behavior on text {
+                PropertyAnimation { duration: 300 }
+            }
+        }
+
         Rectangle {
             id: forecastMenu
             Layout.fillWidth: true
-            Layout.preferredHeight: 120  // Увеличиваем высоту контейнера
+            Layout.preferredHeight: 120
             color: "#f9f9f9"
             border.color: "#cccccc"
-            border.width: 1
+            border.width: 0
             radius: 5
 
             Row {
                 anchors.centerIn: parent
-                spacing: 15  // Увеличиваем расстояние между карточками
+                spacing: 15
 
                 ListView {
                     id: dayListView
                     width: childrenRect.width
                     height: 100
                     orientation: ListView.Horizontal
-                    spacing: 15  // Увеличиваем расстояние здесь тоже
+                    spacing: 15
                     model: dayList
                     interactive: false
 
                     delegate: Rectangle {
-                        width: 160  // ← МЕНЯЕМ ШИРИНУ КАРТОЧКИ ЗДЕСЬ (было 100)
+                        id: dayDelegate
+                        width: 160
                         height: 100
                         radius: 5
                         color: ListView.isCurrentItem ? "#d0eaff" : "#ffffff"
-                        border.color: ListView.isCurrentItem ? "#4a90e2" : "#999"
-                        border.width: ListView.isCurrentItem ? 2 : 1
+                        border.width: 0
 
-                        property bool hovered: false  // ← ЭТО свойство hovered
+                        scale: ListView.isCurrentItem ? 1.05 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 200 }
+                        }
+
+                        Behavior on color {
+                            ColorAnimation { duration: 300 }
+                        }
 
                         Column {
                             anchors.centerIn: parent
-                            spacing: 8  // Увеличиваем расстояние между текстом
+                            spacing: 8
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: modelData.name
+                                text: getDayOfWeek(modelData.name)
                                 font.bold: true
-                                font.pixelSize: 14  // Можно увеличить шрифт
+                                font.pixelSize: 16
+                                color: "#333"
                             }
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: hovered  // ← ИСПОЛЬЗУЕМ свойство hovered ПРИ НАВЕДЕНИИ
-                                     ? weatherMain.getTemperatureRangeString(index)
-                                     : weatherMain.getMedianTemperature(index) + "°C"
-                                font.pixelSize: 16
-                                color: "#333"
+                                text: modelData.name
+                                font.pixelSize: 14
+                                color: "#666"
                             }
                         }
 
                         MouseArea {
                             anchors.fill: parent
-                            hoverEnabled: true  // ← ВКЛЮЧАЕМ ОБНАРУЖЕНИЕ НАВЕДЕНИЯ
                             onClicked: {
-                                dayListView.currentIndex = index;
-                                currentDayModel = modelData.items;
+                                dayListView.currentIndex = index
+                                currentDayModel = modelData.items
                             }
-                            onEntered: parent.hovered = true   // ← УСТАНАВЛИВАЕМ true ПРИ НАВЕДЕНИИ
-                            onExited: parent.hovered = false   // ← УСТАНАВЛИВАЕМ false ПРИ УХОДЕ
                         }
+                    }
+
+                    add: Transition {
+                        NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 400 }
                     }
                 }
             }
         }
-        // Область контента
+
         Rectangle {
             id: contentArea
             Layout.fillWidth: true
@@ -173,39 +137,43 @@ Item {
             border.color: "#cccccc"
             radius: 5
 
-            Loader {
-                id: contentLoader
+            ListView {
+                id: hourListView
                 anchors.fill: parent
                 anchors.margins: 10
-                sourceComponent: threeHourForecastComponent
-            }
-        }
-    }
-
-    Component {
-        id: threeHourForecastComponent
-
-        Column {
-            width: contentArea.width - 20
-            height: contentArea.height - 20
-            spacing: 10
-
-            Text {
-                text: "Прогноз на день " + selectedDay
-                font.pixelSize: 20
-                font.bold: true
-                color: "#333"
-            }
-
-            ListView {
-                width: parent.width
-                height: parent.height - 40
                 model: currentDayModel
                 spacing: 5
                 clip: true
+
+                add: Transition {
+                    ParallelAnimation {
+                        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 500 }
+                        NumberAnimation { property: "y"; from: 50; to: 0; duration: 400 }
+                    }
+                }
+
+                displaced: Transition {
+                    NumberAnimation { properties: "x,y"; duration: 300 }
+                }
+
                 delegate: HourForecastItem {
-                    width: parent?.width || 40
+                    width: parent.width
                     forecastData: modelData
+                    opacity: 0
+
+                    Component.onCompleted: {
+                        delayAppearTimer.start();
+                    }
+
+                    Timer {
+                       id: delayAppearTimer
+                       interval: index * 50
+                       onTriggered: parent.opacity = 1
+                   }
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 400 }
+                    }
                 }
             }
         }
@@ -214,12 +182,33 @@ Item {
     Connections {
         target: weatherForecastController
         function onWeatherFetched(fetchResult) {
-            setDayList(fetchResult.fiveDaysForecast);
+            setDayList(fetchResult.fiveDaysForecast)
 
             if (fetchResult.fiveDaysForecast && fetchResult.fiveDaysForecast.length > 0) {
-                dayListView.currentIndex = 0;
-                currentDayModel = fetchResult.fiveDaysForecast[0].items;
+                dayListView.currentIndex = 0
+                currentDayModel = fetchResult.fiveDaysForecast[0].items
+
+                in_currentCity = currentCity;
+                in_currentRegion = currentRegion;
             }
+        }
+    }
+
+    Rectangle {
+        id: loadingOverlay
+        anchors.fill: parent
+        color: "#ffffff"
+        visible: dayList.length === 0
+
+        Text {
+            anchors.centerIn: parent
+            text: "Loading weather data..."
+            font.pixelSize: 16
+            color: "#666"
+        }
+
+        Behavior on opacity {
+            NumberAnimation { duration: 300 }
         }
     }
 }

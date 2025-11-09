@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QDir>
 
-namespace GeneralUtils
+namespace Common
 {
     FileService::FileService(QObject* parent)
         : QObject(parent)

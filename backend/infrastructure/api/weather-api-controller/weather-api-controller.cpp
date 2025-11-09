@@ -12,7 +12,7 @@
 
 namespace WeatherForecast
 {
-    WeatherApiController::WeatherApiController(GeneralUtils::TaskManager* taskManager, GeneralUtils::BackendConfig::ApiConfig apiConfig, QObject* parent)
+    WeatherApiController::WeatherApiController(Common::TaskManager* taskManager, Common::BackendConfig::ApiConfig apiConfig, QObject* parent)
         : WeatherForecast::IWeatherApiController(parent),
         _taskManager(taskManager),
         _apiConfig(apiConfig)
@@ -76,7 +76,7 @@ namespace WeatherForecast
                     return;
                 }
 
-                _taskManager->runAsync(GeneralUtils::Priority::High,
+                _taskManager->runAsync(Common::Priority::High,
                 [
                     controller = QPointer<WeatherApiController>(this),
                     payload = reply->readAll(),

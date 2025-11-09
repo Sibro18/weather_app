@@ -24,7 +24,7 @@ namespace WeatherForecast
          * @param apiKey - OpenWeather API key.
          * @param parent - Optional parent QObject.
          */
-        explicit WeatherApiController(GeneralUtils::TaskManager* taskManager, GeneralUtils::BackendConfig::ApiConfig apiConfig, QObject* parent = nullptr);
+        explicit WeatherApiController(Common::TaskManager* taskManager, Common::BackendConfig::ApiConfig apiConfig, QObject* parent = nullptr);
 
         /**
          * @brief Sends a request to the OpenWeather API using the given parameters.
@@ -33,8 +33,8 @@ namespace WeatherForecast
         void fetchData(WeatherForecast::RequestData requestData) override;
     private:
         QNetworkAccessManager _networkManager; ///< Network manager for handling HTTP requests
-        GeneralUtils::TaskManager* _taskManager; ///< Manager for async operations.
-        GeneralUtils::BackendConfig::ApiConfig _apiConfig; ///< Config for API.
+        Common::TaskManager* _taskManager; ///< Manager for async operations.
+        Common::BackendConfig::ApiConfig _apiConfig; ///< Config for API.
 
         /**
          * @brief get builded request URL.

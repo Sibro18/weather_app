@@ -10,7 +10,7 @@
 #include <QQueue>
 
 
-namespace GeneralUtils
+namespace Common
 {
     /**
      * @brief Task priority levels for scheduling.
