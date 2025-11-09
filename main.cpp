@@ -1,8 +1,6 @@
 #include "backend/infrastructure/api/geo-names-api-controller/geo-names-api-controller.h"
 #include "backend/infrastructure/cache/geo-names-cache-service/geo-names-cache-service.h"
 
-
-
 #include "backend/application/data-providers/geo-names-data-provider/geo-names-data-provider.h"
 #include "backend/application/services/geo-names/geo-names-file-service/geo-names-file-service.h"
 #include "backend/view-models/geo-names-view-model/geo-names-view-model.h"
@@ -18,6 +16,7 @@
 #include <QGuiApplication>
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
+
 
 int main(int argc, char *argv[])
 {

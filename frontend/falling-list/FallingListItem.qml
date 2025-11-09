@@ -1,4 +1,3 @@
-// FallingListItem.qml
 import QtQuick 6.5
 
 Rectangle {

@@ -17,15 +17,13 @@ Popup {
         anchors.margins: 20
         spacing: 15
 
-        // Заголовок
         Text {
-            text: "Поиск населённых пунктов"
+            text: "Search Settlements"
             font.pixelSize: 18
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
         }
 
-        // Поле названия
         ColumnLayout {
             Layout.fillWidth: true
 
@@ -65,13 +63,12 @@ Popup {
             Layout.fillWidth: true
         }
 
-        // Кнопки
         RowLayout {
             Layout.alignment: Qt.AlignRight
             spacing: 10
 
             Button {
-                text: "Отмена"
+                text: "Cancel"
                 onClicked: searchDialog.close()
             }
 
